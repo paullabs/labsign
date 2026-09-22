@@ -33,6 +33,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "prepublishOnly": "node scripts/check-release.mjs",
     "prepack": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/build.mjs && node --test --test-concurrency=1 test/*.test.ts",

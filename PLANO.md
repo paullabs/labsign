@@ -419,6 +419,8 @@ Publiquei `labsign@0.1.1` no npm depois do commit do doctor (`9a63e1e`), mas ant
 
 Sem mudança de código nesta versão — só sincroniza: `v0.1.2` é montada e publicada (GitHub Release + npm) do mesmo commit, de uma vez, depois de tudo já estar em `main`. Daqui em diante, publicar nos dois lugares no mesmo passo evita esse descompasso.
 
+**Trava técnica, não só lembrete:** `scripts/check-release.mjs`, ligado a `prepublishOnly`, bloqueia `npm publish` (com mensagem clara) a menos que: a árvore esteja limpa, exista uma tag `v<versão do package.json>` apontando exatamente para `HEAD`, `HEAD` seja igual a `origin/main`, e — se o `gh` CLI estiver disponível — a Release correspondente já exista no GitHub. Testado nos dois sentidos: bloqueia em 4 cenários quebrados (sem tag, tag em outro commit, HEAD à frente do remoto, sem Release) e passa limpo no estado bom. Não depende de eu lembrar a ordem certa da próxima vez.
+
 ---
 
 ## 14. Fontes (consultadas em 21/09/2026)
