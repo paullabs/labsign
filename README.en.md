@@ -21,7 +21,7 @@ You say "sign this contract". A screen opens: you draw your signature (or pick a
 
 ### Claude Desktop
 
-1. Download `labsign-<version>.mcpb` from Releases, or build it yourself (see [Development](#development)).
+1. Download `labsign-<version>.mcpb` from the [Releases page](https://github.com/paullabs/labsign/releases), or build it yourself (see [Development](#development)).
 2. Double-click it (or drag it into **Settings → Extensions**) and click **Install**.
 3. In a conversation, ask: _"sign the contract at ~/Downloads/contract.pdf"_. If you only attached the PDF to the conversation, say _"I want to sign this PDF"_: the screen asks you to drop the file on it, because Claude doesn't hand attachments to extensions.
 
@@ -29,30 +29,27 @@ The screen opens inside the conversation in Claude Desktop versions that support
 
 ### Claude Code
 
-For now, from the source (installing straight from GitHub comes with the npm release):
-
 ```bash
-git clone <repository> labsign && cd labsign
-npm ci && npm run mcpb
-claude plugin marketplace add "$(pwd)"
+claude plugin marketplace add paullabs/labsign
 claude plugin install labsign@labsign
 ```
 
-The plugin brings the MCP server and a skill that teaches Claude Code how to use labsign. Claude Code runs in the terminal, so the screen opens in the browser.
+The plugin fetches the MCP server from [npm](https://www.npmjs.com/package/labsign) (via `npx`, at run time) and already brings a skill that teaches Claude Code how to use labsign. Claude Code runs in the terminal, so the screen opens in the browser.
 
 ### Codex
 
 ```bash
-codex mcp add labsign -- node /path/to/labsign/dist/labsign.js mcp
-cp -R /path/to/labsign/plugin/skills/labsign ~/.agents/skills/
+codex mcp add labsign -- npx -y labsign@latest mcp
+mkdir -p ~/.agents/skills/labsign
+curl -fsSL https://raw.githubusercontent.com/paullabs/labsign/main/plugin/skills/labsign/SKILL.md -o ~/.agents/skills/labsign/SKILL.md
 ```
 
-Codex stops tools after 60 seconds, so labsign answers within 45 seconds and then follows the signing through `labsign_status`.
+Codex stops tools after 60 seconds, so labsign answers within 45 seconds and then follows the signing through `labsign_status`. The skill isn't part of the npm package (it's specific to Codex/Claude Code), so `curl` fetches it straight from the repository.
 
 ### Terminal (and any other app)
 
 ```bash
-npm ci && npm run build && npm link   # from the source: creates the labsign command
+npm install -g labsign
 labsign sign contract.pdf --anchor Signature
 ```
 
@@ -98,7 +95,7 @@ npm ci
 npm run build       # dist/labsign.js (CLI + MCP) and dist/ui.html, dist/ui-app.html (the screen)
 npm test            # build + tests (needs Node 24; poppler is optional and enables pixel checks)
 npm run typecheck
-npm run mcpb        # dist/labsign-<version>.mcpb and plugin/server/
+npm run mcpb        # dist/labsign-<version>.mcpb (Claude Desktop installer)
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

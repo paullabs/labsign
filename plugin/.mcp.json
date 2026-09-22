@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "labsign": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/server/labsign.js", "mcp"]
+      "command": "npx",
+      "args": ["-y", "labsign@latest", "mcp"]
     }
   }
 }

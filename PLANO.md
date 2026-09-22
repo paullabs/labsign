@@ -395,11 +395,11 @@ Três revisões independentes: segurança, robustez do núcleo, tela e acessibil
 
 Isso também revelou um bug de diagnóstico (não de segurança): o Claude Desktop moderno instala `.mcpb` como extensão própria, numa pasta `Claude Extensions/` com metadados em `extensions-installations.json` — **não** editando `mcpServers` no `claude_desktop_config.json` como o `doctor` assumia. `doctor` dizia "not found" com tudo funcionando. Corrigido: `doctor` agora lê os dois formatos e mostra a versão instalada (ou avisa se a extensão está desativada). `LABSIGN_CLAUDE_DIR` isola essa checagem nos testes, como `LABSIGN_HOME` já fazia com o cofre.
 
-**Falta — depende do Paulo**
-- **Teste manual no Claude Desktop:** instalar o `.mcpb`, pedir para assinar um PDF e ver o painel abrir dentro da conversa. Conferir também se o Claude Desktop roda a extensão com o Node dele, sem pedir instalação.
-- **npm:** reservar e publicar `labsign` (nome livre em 21/09/2026); trocar o `.mcp.json` do plugin por `npx -y labsign@<versão> mcp` (hoje o servidor do plugin é montado localmente e fica fora do git, então instalar o plugin direto do GitHub ainda não funciona).
+**npm: publicado em 22/09/2026.** Conta `paullabs` criada na hora (2FA ativado antes do primeiro publish — o npm exige para qualquer publicação, mesmo de pacote novo). [`labsign@0.1.1`](https://www.npmjs.com/package/labsign) no ar; conferido de fora (metadados da API, hash do tarball, conteúdo baixado de volta, `npx labsign@0.1.1 --version` funcionando). `plugin/.mcp.json` passou a rodar `npx -y labsign@latest mcp` em vez de um servidor montado localmente — testei a instalação do plugin do zero, numa config isolada: `claude mcp list` mostra `✔ Connected`. Isso destrava instalar o plugin direto do GitHub, sem clonar/montar nada. A skill não vai no pacote do npm (é só para Claude Code/Codex); as instruções do Codex agora buscam ela do repositório com `curl`. `scripts/build-mcpb.mjs` não monta mais `plugin/server/` (ficou sem uso).
 
 **Adiado:** importar foto da assinatura (estava no escopo original da Fase 1); rubrica em todas as páginas, CPF e data, `verify` (Fase 4).
+
+**Nada mais pendente da Fase 1** — Claude Desktop, Claude Code, Codex e terminal testados; GitHub, npm e Releases publicados.
 
 ## 13.1 v0.1.1 — corrigido depois da primeira CI (22/09/2026)
 

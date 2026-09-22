@@ -1,7 +1,6 @@
 node_modules/
 dist/
 out/
-plugin/server/
 .DS_Store
 *.log
 # PDFs assinados em testes contêm a assinatura real de quem testou — nunca entram no repositório

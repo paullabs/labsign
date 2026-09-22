@@ -1,5 +1,6 @@
-// Monta o instalador de dois cliques do Claude Desktop (dist/labsign-<versão>.mcpb)
-// e a pasta do plugin do Claude Code (plugin/server/), a partir do build em dist/.
+// Monta o instalador de dois cliques do Claude Desktop (dist/labsign-<versão>.mcpb),
+// a partir do build em dist/. O plugin do Claude Code não leva servidor embutido: ele
+// roda via "npx labsign@latest", buscando do npm — só sincroniza a versão do manifest.
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, rmSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -33,15 +34,11 @@ rmSync(out, { force: true });
 mcpb('pack', stage, out);
 console.log(`\n${out.replace(root + '/', '')} pronto`);
 
-// ---- plugin do Claude Code: o servidor vai junto do plugin (${CLAUDE_PLUGIN_ROOT}/server)
-const pluginServer = join(root, 'plugin/server');
-rmSync(pluginServer, { recursive: true, force: true });
-mkdirSync(pluginServer, { recursive: true });
-for (const f of artifacts) copyFileSync(join(dist, f), join(pluginServer, f));
+// ---- plugin do Claude Code: só mantém a versão do manifest alinhada com package.json
 const pluginJson = join(root, 'plugin/.claude-plugin/plugin.json');
 const plugin = JSON.parse(readFileSync(pluginJson, 'utf8'));
 if (plugin.version !== pkg.version) {
   plugin.version = pkg.version;
   writeFileSync(pluginJson, `${JSON.stringify(plugin, null, 2)}\n`);
+  console.log('plugin/.claude-plugin/plugin.json: versão sincronizada');
 }
-console.log('plugin/server pronto');
