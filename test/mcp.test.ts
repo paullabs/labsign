@@ -70,7 +70,11 @@ test('A) app sem tela embutida: página local, espera limitada e as travas de se
     const api = (base: string, name: string, headers: Record<string, string> = {}, body: unknown = {}) =>
       fetch(`${base}/api/${st.request_id}/${name}`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
     const base0 = new URL(st.url).origin;
-    assert.equal((await api(base0, 'confirm', {}, { signatureId: 'aaaaaaaa' })).status, 401, 'sem token');
+    const noToken = await api(base0, 'confirm', {}, { signatureId: 'aaaaaaaa' });
+    assert.equal(noToken.status, 401, 'sem token');
+    // sem keep-alive: uma resposta de erro não deixa socket pela metade para a próxima chamada reaproveitar
+    // (foi assim que apareceu um ECONNRESET intermitente no Windows na CI)
+    assert.equal(noToken.headers.get('connection'), 'close');
 
     const { res, human, base } = await openAsHuman(st.url);
     assert.equal(res.status, 200);

@@ -1,6 +1,6 @@
 {
   "name": "labsign",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Assine PDFs com a sua própria assinatura de dentro do Claude, do Codex e do terminal. Local, sem conta, sem nuvem.",
   "keywords": [
     "mcp",

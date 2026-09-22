@@ -78,9 +78,15 @@ export function openInBrowser(url: string): Promise<boolean> {
   return startDetached(cmd, args);
 }
 
+// Cada requisição fecha a conexão (sem keep-alive). É um servidor local, de uso esporádico: o
+// custo de um handshake a mais em 127.0.0.1 é irrelevante, e evita reaproveitar um socket que uma
+// resposta de erro deixou pela metade (visto no Windows: a próxima requisição na mesma conexão
+// reutilizada caía com ECONNRESET quando uma chamada anterior recusava a requisição sem drenar o corpo).
+const CLOSE = { connection: 'close' } as const;
+
 function json(res: ServerResponse, code: number, body: unknown): void {
   if (res.headersSent) return;
-  res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+  res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...CLOSE });
   res.end(JSON.stringify(body));
 }
 
@@ -98,7 +104,7 @@ const PAGES = {
 function page(req: IncomingMessage, res: ServerResponse, code: number, which: 'notFound' | 'reopened'): void {
   const lang = langFrom(String(req.headers['accept-language'] ?? '').split(',')[0]);
   const [title, text] = PAGES[lang][which];
-  res.writeHead(code, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'" });
+  res.writeHead(code, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'", ...CLOSE });
   res.end(`<!doctype html><html lang="${lang}"><meta charset="utf-8"><title>labsign</title><body style="font:16px system-ui;padding:48px;max-width:560px;margin:auto"><h1 style="font-size:20px">${title}</h1><p>${text}</p>`);
 }
 
@@ -137,6 +143,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`,
       'referrer-policy': 'no-referrer',
       'x-content-type-options': 'nosniff',
+      ...CLOSE,
     });
     const html = readFileSync(uiFile('ui.html'), 'utf8')
       .replace('<!--LABSIGN_BOOT-->', () => boot)
@@ -217,6 +224,6 @@ function safeDecode(v: string): string {
 }
 
 function sendPdf(res: ServerResponse, bytes: Buffer): void {
-  res.writeHead(200, { 'content-type': 'application/pdf', 'content-length': bytes.length, 'cache-control': 'no-store' });
+  res.writeHead(200, { 'content-type': 'application/pdf', 'content-length': bytes.length, 'cache-control': 'no-store', ...CLOSE });
   res.end(bytes);
 }

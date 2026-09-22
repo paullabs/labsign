@@ -389,11 +389,25 @@ Três revisões independentes: segurança, robustez do núcleo, tela e acessibil
 - O código do `spike/` saiu do repositório (fica só no disco do Paulo, e `spike/RESULTADOS.md` continua versionado): o protótipo tem a falha crítica corrigida no produto.
 - CI com actions fixadas por hash de commit e `.github/dependabot.yml` (npm e actions, semanal).
 
+**Publicado em 22/09/2026:** repositório [paullabs/labsign](https://github.com/paullabs/labsign) no ar (commit `eca0f4d`), tag e Release `v0.1.0` com o `.mcpb` anexado (SHA-256 conferido baixando de volta da Release). Dependabot já abriu PRs de atualização das actions no mesmo dia.
+
 **Falta — depende do Paulo**
 - **Teste manual no Claude Desktop:** instalar o `.mcpb`, pedir para assinar um PDF e ver o painel abrir dentro da conversa. Conferir também se o Claude Desktop roda a extensão com o Node dele, sem pedir instalação.
-- **Publicação:** criar o repositório no GitHub; reservar e publicar `labsign` no npm (nome livre em 21/09/2026); trocar o `.mcp.json` do plugin por `npx -y labsign@<versão> mcp` (hoje o servidor do plugin é montado localmente e fica fora do git, então instalar o plugin direto do GitHub ainda não funciona); anexar o `.mcpb` na Release; rodar a CI pela primeira vez.
+- **npm:** reservar e publicar `labsign` (nome livre em 21/09/2026); trocar o `.mcp.json` do plugin por `npx -y labsign@<versão> mcp` (hoje o servidor do plugin é montado localmente e fica fora do git, então instalar o plugin direto do GitHub ainda não funciona).
 
 **Adiado:** importar foto da assinatura (estava no escopo original da Fase 1); rubrica em todas as páginas, CPF e data, `verify` (Fase 4).
+
+## 13.1 v0.1.1 — corrigido depois da primeira CI (22/09/2026)
+
+A primeira execução da CI (gatilhada pelo push do `v0.1.0`) pegou um bug real: no job `dist (node 24, windows-latest)`, o teste de ponta a ponta do MCP falhava com `ECONNRESET` — só nessa combinação, os outros 5 jobs (Linux, macOS, Windows com Node 22) passaram.
+
+**Causa:** o servidor local deixava a conexão HTTP em keep-alive (padrão do Node). Vários caminhos de erro (token errado, origem errada, `Sec-Fetch-Site` de fora) respondem sem drenar o corpo da requisição até o fim. Numa bateria de chamadas em sequência pela mesma conexão (como o teste faz, e como a tela real faz ao trocar de estado), isso deixa o socket num estado ambíguo para reaproveitar — no Windows, a chamada seguinte às vezes pega essa conexão já sendo fechada pelo servidor e cai com `ECONNRESET`. Em Linux/macOS o timing normalmente não expõe isso, mas o risco existe lá também.
+
+Isso não é só um problema de teste: a tela de verdade também faz várias chamadas em sequência pela mesma origem, então um usuário Windows podia esbarrar nisso de vez em quando.
+
+**Correção:** `Connection: close` em toda resposta do servidor local — sem keep-alive, sem essa classe de corrida. É um servidor de uso esporádico, o custo de um handshake a mais em `127.0.0.1` é irrelevante. Teste novo (`test/mcp.test.ts`) confere o cabeçalho.
+
+Como já havia uma Release pública (`v0.1.0`) com o `.mcpb` anexado, a correção virou `v0.1.1` em vez de reescrever a tag já publicada.
 
 ---
 
