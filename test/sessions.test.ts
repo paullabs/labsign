@@ -14,6 +14,7 @@ process.env.LABSIGN_OUTPUT_DIR = out;
 process.env.LABSIGN_NO_OPEN = '1'; // nada de abrir Finder, e-mail ou navegador de verdade
 process.env.LABSIGN_TRASH_DIR = trash; // "Lixeira" de mentira
 const sessions = await import('../src/core/sessions.ts');
+const { deliveryOptions } = await import('../src/core/deliver.ts');
 
 const strokes = [line(10, 40, 200, 60, 20)];
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -198,7 +199,9 @@ test('entregar: só depois de assinar; e-mail por app que não existe é recusad
   await sessions.uiConfirm(s, { signatureId: sig.id });
   const opened = await sessions.uiDeliver(s, { action: 'open' });
   assert.equal(opened.done, false, 'LABSIGN_NO_OPEN');
-  await assert.rejects(sessions.uiDeliver(s, { action: 'mail', client: 'default' as any }), process.platform === 'linux' ? () => true : { code: 'DELIVERY_UNAVAILABLE' });
+  // um app que falta neste sistema: Apple Mail só existe no Mac; "default" (xdg-email) só no Linux
+  const missing = (['apple-mail', 'default', 'outlook'] as const).find((c) => !deliveryOptions().mail.includes(c))!;
+  await assert.rejects(sessions.uiDeliver(s, { action: 'mail', client: missing }), { code: 'DELIVERY_UNAVAILABLE' });
   const gmail = await sessions.uiDeliver(s, { action: 'mail', client: 'gmail', subject: 'Assinado', body: 'Segue.' });
   assert.equal((gmail as any).guided, true);
   const wa = await sessions.uiDeliver(s, { action: 'whatsapp', phone: '+55 (11) 91234-5678', text: 'Segue' });
