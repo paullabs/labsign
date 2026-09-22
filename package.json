@@ -1,0 +1,65 @@
+{
+  "name": "labsign",
+  "version": "0.1.0",
+  "description": "Assine PDFs com a sua própria assinatura de dentro do Claude, do Codex e do terminal. Local, sem conta, sem nuvem.",
+  "keywords": [
+    "mcp",
+    "mcp-apps",
+    "signature",
+    "assinatura",
+    "pdf",
+    "claude",
+    "codex",
+    "esign"
+  ],
+  "license": "MIT",
+  "author": "Paulo Labs",
+  "type": "module",
+  "bin": {
+    "labsign": "dist/labsign.js"
+  },
+  "files": [
+    "dist/labsign.js",
+    "dist/ui.html",
+    "dist/ui-app.html",
+    "dist/THIRD_PARTY_LICENSES.txt",
+    "README.md",
+    "README.en.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "prepack": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/build.mjs && node --test --test-concurrency=1 test/*.test.ts",
+    "test:unit": "node --test test/placement.test.ts test/vault.test.ts",
+    "mcpb": "node scripts/build.mjs && node scripts/build-mcpb.mjs",
+    "sign": "node src/cli/index.ts sign",
+    "doctor": "node src/cli/index.ts doctor"
+  },
+  "overrides": {
+    "pdfkit": "^0.20.2",
+    "tmp": "^0.2.7"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
+    "@cantoo/pdf-lib": "^2.11.1",
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/ext-apps": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@signpdf/placeholder-plain": "^3.3.0",
+    "@signpdf/signer-p12": "^3.3.0",
+    "@signpdf/signpdf": "^3.3.0",
+    "@types/node": "^26.6.2",
+    "esbuild": "^0.28.2",
+    "node-forge": "^1.4.0",
+    "pdfjs-dist": "^6.3.289",
+    "perfect-freehand": "^1.2.3",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.5"
+  }
+}

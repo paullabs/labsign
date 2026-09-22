@@ -1,0 +1,16 @@
+{
+  "name": "labsign",
+  "owner": {
+    "name": "Paulo Labs"
+  },
+  "metadata": {
+    "description": "labsign: assinatura de PDFs com a sua própria assinatura, local e open source."
+  },
+  "plugins": [
+    {
+      "name": "labsign",
+      "source": "./plugin",
+      "description": "Assine PDFs com a sua própria assinatura sem sair do Claude Code — local, sem conta, sem nuvem."
+    }
+  ]
+}

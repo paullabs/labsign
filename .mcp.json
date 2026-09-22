@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "labsign-dev": {
+      "command": "node",
+      "args": ["dist/labsign.js", "mcp"]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "labsign",
+  "displayName": "labsign",
+  "version": "0.1.0",
+  "description": "Assine PDFs com a sua própria assinatura sem sair do Claude Code — local, sem conta, sem nuvem.",
+  "author": {
+    "name": "Paulo Labs"
+  },
+  "license": "MIT",
+  "keywords": ["assinatura", "signature", "pdf", "contrato", "contract", "mcp"]
+}

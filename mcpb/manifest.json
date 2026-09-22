@@ -1,0 +1,34 @@
+{
+  "manifest_version": "0.3",
+  "name": "labsign",
+  "display_name": "labsign",
+  "version": "0.0.0",
+  "description": "Assine PDFs com a sua própria assinatura sem sair do Claude — local, sem conta, sem nuvem.",
+  "long_description": "O labsign abre uma tela dentro da conversa para você desenhar ou escolher a sua assinatura, posicioná-la no documento e assinar. O PDF assinado sai ao lado do original (ou em Downloads, se você arrastou o arquivo), sem sobrescrever nada. Suas assinaturas ficam guardadas só neste computador; o modelo nunca vê o desenho e nada é assinado sem um clique seu.\n\nSign PDFs with your own signature without leaving Claude. Local, no account, no cloud.",
+  "author": {
+    "name": "Paulo Labs"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "keywords": ["assinatura", "signature", "pdf", "contrato", "contract", "esign"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/labsign.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/labsign.js", "mcp"]
+    }
+  },
+  "tools": [
+    { "name": "labsign_sign_document", "description": "Opens the labsign screen so the user signs a PDF with their own signature." },
+    { "name": "labsign_manage_signatures", "description": "Opens the labsign screen to draw, save and delete signatures." },
+    { "name": "labsign_status", "description": "Checks a signing request." },
+    { "name": "labsign_open_in_browser", "description": "Opens the signing screen in the browser when the panel did not show up." },
+    { "name": "labsign_list_signatures", "description": "Names of the saved signatures (never the drawing)." }
+  ],
+  "tools_generated": true,
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=22.13.0" }
+  }
+}

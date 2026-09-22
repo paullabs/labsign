@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+plugin/server/
+.DS_Store
+*.log
+# PDFs assinados em testes contêm a assinatura real de quem testou — nunca entram no repositório
+*.assinado*.pdf
+# O protótipo (Fase 0) fica fora do repositório público: ele tem falhas de segurança que o produto corrigiu
+# (o link da tela ia para o modelo). Só os resultados são publicados.
+spike/*
+!spike/RESULTADOS.md
