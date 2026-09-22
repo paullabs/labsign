@@ -413,6 +413,12 @@ Isso não é só um problema de teste: a tela de verdade também faz várias cha
 
 Como já havia uma Release pública (`v0.1.0`) com o `.mcpb` anexado, a correção virou `v0.1.1` em vez de reescrever a tag já publicada.
 
+## 13.2 v0.1.2 — GitHub e npm publicados em momentos diferentes, saíram dessincronizados (22/09/2026)
+
+Publiquei `labsign@0.1.1` no npm depois do commit do doctor (`9a63e1e`), mas antes do commit seguinte (`fbbac26`, que corrigia os READMEs — inclusive um `git clone <repositório>` com placeholder nunca preenchido, que sobrou de antes do repositório existir). Resultado: o npm ficou com o README antigo e quebrado; a Release `v0.1.1` do `.mcpb` no GitHub, montada antes do commit do doctor, ficou sem essa correção. Nenhum dos dois lados tinha exatamente o que estava em `main`.
+
+Sem mudança de código nesta versão — só sincroniza: `v0.1.2` é montada e publicada (GitHub Release + npm) do mesmo commit, de uma vez, depois de tudo já estar em `main`. Daqui em diante, publicar nos dois lugares no mesmo passo evita esse descompasso.
+
 ---
 
 ## 14. Fontes (consultadas em 21/09/2026)
