@@ -6,6 +6,9 @@
 // Em contrato de verdade o rótulo aparece muitas vezes no corpo ("A CONTRATANTE pagará…")
 // e o bloco de assinatura fica no fim. Por isso: o texto é remontado em linhas, a comparação
 // ignora acento/caixa, e ganha a ÚLTIMA linha com cara de rótulo (começa pela âncora e é curta).
+// Na mesma passada, junta todos os blocos de assinatura (CONTRATANTE, LOCATÁRIA, Testemunha 1…,
+// com o nome de quem assina quando o PDF traz): é a lista "Onde assinar" da tela, para achar o
+// lugar num contrato de 60 páginas sem rolar página por página.
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 // registra globalThis.pdfjsWorker: o pdf.js roda o "worker" na própria thread,
 // sem precisar achar o arquivo do worker em disco (necessário depois de empacotar)
@@ -19,10 +22,23 @@ export interface AnchorInfo {
   page: number;
 }
 
+/** Um lugar de assinatura do documento, para a lista "Onde assinar" da tela. */
+export interface SpotInfo {
+  /** Rótulo como está no PDF ("CONTRATANTE", "Pela LOCADORA", "Testemunha 1"), sem o nome que vem depois. */
+  label: string;
+  /** Nome de quem assina ali (depois do rótulo ou na linha de baixo), quando o PDF traz. */
+  name: string | null;
+  /** 1 = primeira página. */
+  page: number;
+  placement: Placement;
+}
+
 export interface SignatureSpot {
   placement: Placement;
   anchor: AnchorInfo;
   pageCount: number;
+  /** Todos os blocos de assinatura achados, na ordem de leitura (o escolhido entre eles, se houver). */
+  spots: SpotInfo[];
 }
 
 /** Assinatura "sentada" na linha que fica logo acima do rótulo encontrado. */
@@ -67,6 +83,10 @@ interface Piece {
 interface Segment {
   text: string;
   at: { x: number; y: number }[];
+  /** O mesmo trecho como está no PDF (acento e caixa), para mostrar na tela. */
+  raw: string;
+  /** Tamanho da letra (pontos). */
+  size: number;
 }
 
 interface Hit {
@@ -101,9 +121,10 @@ function pageSegments(items: TextItemLike[], viewport: ViewportLike): Segment[] 
   }
 
   const segments: Segment[] = [];
+  const blank = (): Segment => ({ text: '', at: [], raw: '', size: 0 });
   for (const line of [...lines, ...solo.map((p) => [p])]) {
     line.sort((p, q) => p.x - q.x);
-    let seg: Segment = { text: '', at: [] };
+    let seg = blank();
     let prev: Piece | null = null;
     let end = -Infinity;
     const push = (ch: string, x: number, y: number) => {
@@ -114,19 +135,31 @@ function pageSegments(items: TextItemLike[], viewport: ViewportLike): Segment[] 
       seg.text += ch;
       seg.at.push({ x, y });
     };
+    const pushRaw = (ch: string) => {
+      if (/\s/.test(ch)) {
+        if (!seg.raw || seg.raw.endsWith(' ')) return;
+        ch = ' ';
+      }
+      seg.raw += ch;
+    };
     for (const p of line) {
       // negrito "falso" (o mesmo texto desenhado duas vezes, quase no mesmo lugar): conta uma vez
       if (prev && p.str === prev.str && Math.abs(p.x - prev.x) < 0.5 * p.size) continue;
       const gap = p.x - end;
       if (prev && gap > COLUMN_GAP * p.size) {
         segments.push(seg);
-        seg = { text: '', at: [] };
-      } else if (prev && gap > WORD_GAP * p.size) push(' ', p.x, p.y);
+        seg = blank();
+      } else if (prev && gap > WORD_GAP * p.size) {
+        push(' ', p.x, p.y);
+        pushRaw(' ');
+      }
       const chars = [...p.str];
       chars.forEach((ch, i) => {
         const x = p.x + (p.w * i) / chars.length;
         for (const f of fold(ch)) push(f, x, p.y);
+        pushRaw(ch);
       });
+      seg.size = Math.max(seg.size, p.size);
       prev = p;
       end = Math.max(end, p.x + p.w);
     }
@@ -137,9 +170,119 @@ function pageSegments(items: TextItemLike[], viewport: ViewportLike): Segment[] 
       s.text = s.text.slice(0, -1);
       s.at.pop();
     }
+    s.raw = s.raw.trimEnd();
   }
   return segments.filter((s) => s.text);
 }
+
+// ---------------------------------------------------------------- blocos de assinatura
+// Papéis que rotulam um bloco de assinatura em contratos (sem acento, minúsculas). Só o
+// singular: "TESTEMUNHAS:" é o título da seção, não o lugar onde alguém assina.
+const ROLES = [
+  'contratante', 'contratada', 'contratado', 'locador', 'locadora', 'locatario', 'locataria', 'fiador', 'fiadora',
+  'testemunha', 'interveniente', 'anuente', 'comprador', 'compradora', 'vendedor', 'vendedora', 'promitente compradora',
+  'promitente comprador', 'promitente vendedora', 'promitente vendedor', 'outorgante', 'outorgada', 'outorgado',
+  'cedente', 'cessionaria', 'cessionario', 'devedora', 'devedor', 'credora', 'credor', 'empregadora', 'empregador',
+  'empregada', 'empregado', 'prestadora', 'prestador', 'tomadora', 'tomador', 'avalista', 'mutuante', 'mutuaria',
+  'mutuario', 'comodante', 'comodataria', 'comodatario', 'doadora', 'doador', 'donataria', 'donatario', 'arrendadora',
+  'arrendador', 'arrendataria', 'arrendatario', 'franqueadora', 'franqueador', 'franqueada', 'franqueado',
+  'licenciante', 'licenciada', 'licenciado', 'inquilina', 'inquilino', 'proprietaria', 'proprietario', 'assinatura',
+  'signature', 'signed by', 'witness', 'landlord', 'tenant', 'buyer', 'seller', 'client', 'contractor', 'consultant',
+  'employer', 'employee', 'guarantor', 'lessor', 'lessee', 'licensor', 'licensee', 'purchaser', 'supplier',
+].sort((a, b) => b.length - a.length); // "promitente compradora" antes de "comprador"
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+// "Pela CONTRATANTE", "1ª Testemunha", "Testemunha 2", "CONTRATANTE: Maria"
+const ROLE_RE = new RegExp(
+  String.raw`^(?:(?:pela|pelo|p\/|por|a|o)\s+)?(?:(\d{1,2})\s*[ao]?\.?\s+)?(${ROLES.map(escapeRe).join('|')})(?![\p{L}\p{N}])(?:\s*(?:n[o.]?\s*)?(\d{1,2})(?![\p{N}]))?`,
+  'u',
+);
+const NOT_A_NAME = /^(cpf|cnpj|rg|oab|crc|crm|crea|cep|end(ereco)?|data|local|e-?mail|tel|fone)\b/;
+const MAX_SPOTS = 12;
+
+interface RoleHit {
+  key: string;
+  label: string;
+  name: string | null;
+  pageIndex: number;
+  x: number;
+  /** Linha de base do rótulo (identifica o bloco). */
+  y: number;
+  /** Linha de base sobre a qual a assinatura senta logo acima (o rótulo, ou o nome acima dele). */
+  anchorY: number;
+}
+
+const CONNECTORS = new Set(['da', 'de', 'do', 'das', 'dos', 'e', 'y', 'di', 'du', 'del', 'van', 'von', 'la', 'le', '&']);
+/** "Maria Exemplo da Silva", "EMPRESA EXEMPLO LTDA." — e não "pagará à CONTRATADA o valor…". */
+function nameLike(s: string): boolean {
+  const words = s.split(/\s+/).filter(Boolean);
+  return words.length > 0 && words.length <= 9 && words.every((w) => CONNECTORS.has(w.toLowerCase()) || /^[\p{Lu}\p{N}("]/u.test(w));
+}
+
+/** O trecho é o rótulo de um bloco de assinatura? Devolve onde o rótulo começa e o que ele diz. */
+function roleOf(seg: Segment): { start: number; key: string; label: string; rest: string } | null {
+  const lead = /^[^\p{L}\p{N}]*/u.exec(seg.text)?.[0].length ?? 0; // "____", "(", "- " antes do rótulo
+  const body = seg.text.slice(lead);
+  const m = ROLE_RE.exec(body);
+  if (!m || body.length > m[0].length + LABEL_SLACK) return null;
+  // o mesmo número de palavras no texto original: o rótulo como está no PDF, com acento e caixa
+  const words = m[0].trim().split(' ').length;
+  const rawWords = seg.raw.replace(/^[^\p{L}\p{N}]*/u, '').split(' ');
+  const labelRaw = rawWords.slice(0, words).join(' ');
+  const restRaw = rawWords.slice(words).join(' ');
+  const rest = restRaw.replace(/^[\s:\-–—.]+/, '').trim();
+  // depois do rótulo só pode vir um nome ("CONTRATANTE: Maria"), não o resto de uma frase do corpo do contrato
+  const separated = /[:\-–—]$/.test(labelRaw) || /^\s*[:\-–—]/.test(restRaw);
+  if (rest && !nameLike(rest) && !(separated && rest.length <= 40)) return null;
+  const label = labelRaw.replace(/[:\-–—]+$/, '').trim();
+  // "Assinatura do Locatário": o complemento faz parte do rótulo, não é um nome
+  if (!separated && /^(assinatura|signature)$/.test(m[2]) && /^(do|da|de|dos|das|of)\s/i.test(rest)) {
+    return { start: lead, key: normalizeText(`${label} ${rest}`), label: `${label} ${rest}`.replace(/[:\-–—]+$/, '').slice(0, 60), rest: '' };
+  }
+  return { start: lead, key: `${m[2]}${m[1] ?? m[3] ?? ''}`, label, rest };
+}
+
+/** Linha curta com cara de nome, logo abaixo (ou logo acima) do rótulo e alinhada com ele. */
+function nameNear(segments: Segment[], seg: Segment, x: number, y: number, dir: 1 | -1): Segment | null {
+  const size = seg.size || 10;
+  let best: Segment | null = null;
+  for (const s of segments) {
+    if (s === seg || !s.at.length) continue;
+    const dy = (s.at[0].y - y) * dir;
+    if (dy < 0.6 * size || dy > 2.8 * size || Math.abs(s.at[0].x - x) > 36) continue;
+    const text = s.raw.replace(/^nome\s*:\s*/i, '').trim();
+    if (text.length < 3 || text.length > 70 || /^[_.\s]+$/.test(text) || NOT_A_NAME.test(fold(text)) || ROLE_RE.test(fold(text))) continue;
+    if (!best || Math.abs(s.at[0].y - y) < Math.abs(best.at[0].y - y)) best = s;
+  }
+  return best;
+}
+
+/** Blocos de assinatura de uma página. */
+function pageRoles(segments: Segment[], pageIndex: number): RoleHit[] {
+  const hits: RoleHit[] = [];
+  for (const seg of segments) {
+    const r = roleOf(seg);
+    if (!r) continue;
+    const at = seg.at[r.start];
+    let name: string | null = r.rest.length >= 3 && r.rest.length <= 70 ? r.rest : null;
+    let anchorY = at.y;
+    if (!name) {
+      const below = nameNear(segments, seg, at.x, at.y, 1);
+      const above = below ? null : nameNear(segments, seg, at.x, at.y, -1);
+      name = (below ?? above)?.raw.replace(/^nome\s*:\s*/i, '').trim() ?? null;
+      // nome entre a linha e o rótulo ("____ / Maria / CONTRATANTE"): a assinatura senta acima do nome
+      if (above) anchorY = above.at[0].y;
+    }
+    hits.push({ key: r.key, label: r.label, name, pageIndex, x: at.x, y: at.y, anchorY });
+  }
+  return hits;
+}
+
+const spotOf = (h: RoleHit): SpotInfo => ({
+  label: h.label,
+  name: h.name,
+  page: h.pageIndex + 1,
+  placement: placementAbove({ pageIndex: h.pageIndex, x: Math.round(h.x), baseline: Math.round(h.anchorY) }),
+});
 
 /** p vem depois de q na ordem de leitura (página; de cima para baixo; da esquerda para a direita)? */
 function later(p: Hit, q: Hit | null): boolean {
@@ -186,38 +329,53 @@ export async function locateSignatureSpot(pdfBytes: Uint8Array, anchorText?: str
   const { task, doc } = await openReadable(pdfBytes);
   try {
     const needle = needleOf(anchorText ?? '');
-    if (needle) {
-      // de trás para frente: a primeira página (do fim) com um rótulo já é a resposta;
-      // sem rótulo em lugar nenhum, vale a última ocorrência de qualquer tipo
-      let chosen: Hit | null = null;
-      for (let n = doc.numPages; n >= 1; n--) {
-        const page = await doc.getPage(n);
-        const viewport = page.getViewport({ scale: 1 });
-        const { items } = await page.getTextContent();
-        let label: Hit | null = null;
-        let any: Hit | null = null;
-        for (const seg of pageSegments(items as TextItemLike[], viewport)) {
-          const i = labelStart(seg.text, needle);
-          if (i >= 0) {
-            const hit = { pageIndex: n - 1, ...seg.at[i] };
-            if (later(hit, label)) label = hit;
-          }
-          const j = seg.text.lastIndexOf(needle);
-          if (j >= 0) {
-            const hit = { pageIndex: n - 1, ...seg.at[j] };
-            if (later(hit, any)) any = hit;
-          }
+    // Uma passada por todas as páginas: o ÚLTIMO rótulo com a âncora (o bloco de assinatura fica no fim),
+    // a última ocorrência de qualquer tipo (plano B) e o último bloco de cada papel (a lista "Onde assinar").
+    let label: (Hit & { raw: string }) | null = null;
+    let any: Hit | null = null;
+    const roles = new Map<string, RoleHit>();
+    for (let n = 1; n <= doc.numPages; n++) {
+      const page = await doc.getPage(n);
+      const viewport = page.getViewport({ scale: 1 });
+      const { items } = await page.getTextContent();
+      const segments = pageSegments(items as TextItemLike[], viewport);
+      for (const hit of pageRoles(segments, n - 1)) {
+        const prev = roles.get(hit.key);
+        if (!prev || later(hit, prev)) roles.set(hit.key, hit);
+      }
+      if (!needle) continue;
+      for (const seg of segments) {
+        const i = labelStart(seg.text, needle);
+        if (i >= 0) {
+          const hit = { pageIndex: n - 1, ...seg.at[i], raw: seg.raw };
+          if (later(hit, label)) label = hit;
         }
+        const j = seg.text.lastIndexOf(needle);
+        if (j >= 0) {
+          const hit = { pageIndex: n - 1, ...seg.at[j] };
+          if (later(hit, any)) any = hit;
+        }
+      }
+    }
+    const blocks = [...roles.values()].sort((a, b) => (later(a, b) ? 1 : -1)).slice(-MAX_SPOTS);
+    const spots = blocks.map(spotOf);
+
+    const chosen = label ?? any;
+    if (chosen) {
+      // o rótulo da âncora costuma ser um dos blocos: usa a mesma posição da lista (que considera o nome acima do rótulo)
+      const same = label && blocks.findIndex((b) => b.pageIndex === label!.pageIndex && Math.abs(b.x - label!.x) < 2 && Math.abs(b.y - label!.y) < 2);
+      let placement: Placement;
+      if (label && same !== null && same >= 0) placement = spots[same].placement;
+      else {
+        placement = placementAbove({ pageIndex: chosen.pageIndex, x: Math.round(chosen.x), baseline: Math.round(chosen.y) });
+        // âncora que não é um papel conhecido ("Assinatura do Locatário"): entra na lista também
         if (label) {
-          chosen = label;
-          break;
+          const text = label.raw.replace(/^[^\p{L}\p{N}]*/u, '').trim().slice(0, 60);
+          spots.push({ label: text, name: null, page: label.pageIndex + 1, placement });
+          spots.sort((a, b) => a.page - b.page || (a.placement.bottom ?? 0) - (b.placement.bottom ?? 0) || a.placement.x - b.placement.x);
         }
-        chosen ??= any;
       }
-      if (chosen) {
-        const anchor = { pageIndex: chosen.pageIndex, x: Math.round(chosen.x), baseline: Math.round(chosen.y) };
-        return { placement: placementAbove(anchor), anchor: { text: anchorText ?? null, found: true, page: chosen.pageIndex + 1 }, pageCount: doc.numPages };
-      }
+      return { placement, anchor: { text: anchorText ?? null, found: true, page: chosen.pageIndex + 1 }, pageCount: doc.numPages, spots };
     }
     const last = await doc.getPage(doc.numPages);
     const { width, height } = last.getViewport({ scale: 1 });
@@ -231,6 +389,7 @@ export async function locateSignatureSpot(pdfBytes: Uint8Array, anchorText?: str
       },
       anchor: { text: anchorText || null, found: false, page: doc.numPages },
       pageCount: doc.numPages,
+      spots,
     };
   } finally {
     await task.destroy();

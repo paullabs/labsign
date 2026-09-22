@@ -104,6 +104,65 @@ test('sem ocorrência: proposta na última página, found=false', async () => {
   }
 });
 
+test('lista "Onde assinar": todos os blocos, com o nome de quem assina, sem as frases do corpo', async () => {
+  const bytes = await pdf(
+    body([
+      'CONTRATANTE: PAULO EXEMPLO, brasileiro, casado, empresário, portador do RG nº 0000,',
+      'A CONTRATANTE pagará à CONTRATADA o valor mensal combinado,',
+      'CONTRATANTE e CONTRATADA elegem o foro da comarca.',
+    ]),
+    (page, { font, bold }) => {
+      const at = (text: string, x: number, y: number, f = font) => page.drawText(text, { x, y, size: 10, font: f });
+      at('______________________________', 70, 300);
+      at('CONTRATANTE', 70, 285, bold);
+      at('Maria Exemplo da Silva', 70, 271);
+      at('______________________________', 320, 300);
+      at('Pela CONTRATADA:', 320, 285, bold);
+      at('EMPRESA EXEMPLO LTDA.', 320, 271);
+      at('TESTEMUNHAS:', 70, 220, bold);
+      at('Testemunha 1', 70, 150, bold);
+      at('Nome: João Teste', 70, 136);
+      at('CPF: 000.000.000-00', 70, 122);
+      at('Testemunha 2', 320, 150, bold);
+      at('Nome: Ana Teste', 320, 136);
+    },
+  );
+  const spot = await locateSignatureSpot(bytes, 'CONTRATANTE');
+  assert.deepEqual(
+    spot.spots.map((s) => [s.label, s.name, s.page]),
+    [
+      ['CONTRATANTE', 'Maria Exemplo da Silva', 2],
+      ['Pela CONTRATADA', 'EMPRESA EXEMPLO LTDA.', 2],
+      ['Testemunha 1', 'João Teste', 2],
+      ['Testemunha 2', 'Ana Teste', 2],
+    ],
+  );
+  assertNear(spot, expectedFor(1, 70, 285));
+  assert.deepEqual(spot.spots[0].placement, spot.placement, 'a âncora escolhida é o mesmo lugar da lista');
+});
+
+test('nome entre a linha e o rótulo: a assinatura senta acima do nome; âncora que não é papel entra na lista', async () => {
+  const bytes = await pdf((page, { font, bold }) => {
+    page.drawText('________________________', { x: 100, y: 240, size: 10, font });
+    page.drawText('Joana Exemplo', { x: 100, y: 226, size: 10, font });
+    page.drawText('LOCATÁRIA', { x: 100, y: 212, size: 10, font: bold });
+    page.drawText('Visto do corretor', { x: 330, y: 212, size: 10, font: bold });
+  });
+  const spot = await locateSignatureSpot(bytes, 'LOCATARIA');
+  assert.deepEqual(spot.spots[0], { label: 'LOCATÁRIA', name: 'Joana Exemplo', page: 1, placement: { ...expectedFor(0, 100, 226), width: 170, maxHeight: 55 } });
+  assertNear(spot, expectedFor(0, 100, 226));
+  const custom = await locateSignatureSpot(bytes, 'Visto do corretor');
+  assert.ok(custom.spots.some((s) => s.label === 'Visto do corretor' && s.page === 1));
+  assertNear(custom, expectedFor(0, 330, 212));
+});
+
+test('PDF sem texto (escaneado): lista vazia, proposta na última página', async () => {
+  const spot = await locateSignatureSpot(await pdf(() => {}, () => {}), 'CONTRATANTE');
+  assert.deepEqual(spot.spots, []);
+  assert.equal(spot.anchor.found, false);
+  assert.equal(spot.placement.pageIndex, 1);
+});
+
 let dir: string;
 before(async () => {
   dir = tempDir();

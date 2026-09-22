@@ -93,7 +93,7 @@ async function main(): Promise<number> {
     const { locateSignatureSpot } = await import('../core/anchors.ts');
     const spot = await locateSignatureSpot(bytes, anchor);
     say(spot.anchor.found ? t(lang, 'cliAnchorFound', { text: anchor, page: spot.anchor.page }) : t(lang, 'cliAnchorMissing', { text: anchor }));
-    session = sessions.prepareSignSession({ file, bytes, placements: [spot.placement], anchor: spot.anchor, client: 'cli' });
+    session = sessions.prepareSignSession({ file, bytes, placements: [spot.placement], anchor: spot.anchor, spots: spot.spots, pageCount: spot.pageCount, client: 'cli' });
     what = t(lang, 'cliWhatSign', { file });
   }
   reportMigration();
@@ -105,21 +105,27 @@ async function main(): Promise<number> {
   const where = opened ? t(lang, 'cliOpened', { url: publicUrl(session) }) : t(lang, 'cliOpenManually', { url: sessionUrl(session) });
   say(`\nlabsign · ${what}\n${where}\n${t(lang, 'cliVault', { path: HOME })}\n`);
 
-  const s = (await sessions.waitForSession(session.id, 30 * 60 * 1000))!;
-  const state = sessions.publicState(s) as Record<string, any>;
   const pad = session.kind === 'pad';
-  if (state.status === 'signed') {
-    if (state.signed_file) say(`${t(lang, 'cliSigned', { file: state.signed_file })}\nSHA-256:  ${state.sha256_signed}`);
-    else say(state.signatures_saved > 1 ? t(lang, 'cliSavedMany', { n: state.signatures_saved, label: state.signature_label }) : t(lang, 'cliSavedOne', { label: state.signature_label }));
-  } else if (state.status === 'cancelled') say(t(lang, pad ? 'cliNoNewSignature' : 'cliCancelled'));
-  else say(state.status === 'expired' ? t(lang, 'cliExpired') : t(lang, 'cliClosed', { status: state.status }));
+  const interactive = Boolean(process.stdout.isTTY);
+  let s = (await sessions.waitForSession(session.id, 30 * 60 * 1000))!;
+  let state = sessions.publicState(s) as Record<string, any>;
+  for (;;) {
+    if (state.status === 'signed') {
+      if (state.signed_file) say(`${t(lang, 'cliSigned', { file: state.signed_file })}\nSHA-256:  ${state.sha256_signed}`);
+      else say(state.signatures_saved > 1 ? t(lang, 'cliSavedMany', { n: state.signatures_saved, label: state.signature_label }) : t(lang, 'cliSavedOne', { label: state.signature_label }));
+    } else if (state.status === 'cancelled') say(t(lang, pad ? 'cliNoNewSignature' : 'cliCancelled'));
+    else say(state.status === 'expired' ? t(lang, 'cliExpired') : t(lang, 'cliClosed', { status: state.status }));
+    if (!(state.status === 'signed' && state.signed_file)) break;
 
-  if (state.status === 'signed' && state.signed_file) {
-    // a tela ainda serve para baixar, enviar por e-mail/WhatsApp ou abrir a pasta. Sem terminal interativo
-    // (um agente rodando o comando), 15 min travariam o agente: espera pouco.
-    const interactive = Boolean(process.stdout.isTTY);
+    // a tela ainda serve para salvar, enviar por e-mail/WhatsApp, abrir a pasta ou desfazer. Sem terminal
+    // interativo (um agente rodando o comando), 15 min travariam o agente: espera pouco.
     say(`\n${interactive ? t(lang, 'cliKeepAlive') : t(lang, 'cliKeepAliveShort', { seconds: KEEP_ALIVE_AGENT_S })}`);
-    await sessions.waitForClose(session.id, (interactive ? 15 * 60 : KEEP_ALIVE_AGENT_S) * 1000);
+    const after = await sessions.waitAfterSigned(session.id, (interactive ? 15 * 60 : KEEP_ALIVE_AGENT_S) * 1000);
+    if (after !== 'reopened') break;
+    // desfez na tela: a cópia foi para a Lixeira e o pedido reabriu com o mesmo documento — espera de novo
+    say(t(lang, 'cliUndone'));
+    s = (await sessions.waitForSession(session.id, 30 * 60 * 1000))!;
+    state = sessions.publicState(s) as Record<string, any>;
   }
   // fechar o cofre sem salvar nada não é erro; cancelar uma assinatura é
   return state.status === 'signed' || (pad && state.status === 'cancelled') ? 0 : 1;

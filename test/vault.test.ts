@@ -49,10 +49,10 @@ test('cofre: CLI continua aberto até "Concluir"; MCP encerra no primeiro salvar
 });
 
 test('preferências: padrão segurar-e-arrastar/azul-marinho/médio; persistem; inválidas são ignoradas', () => {
-  assert.deepEqual(vault.getPrefs(), { drawMode: 'drag', ink: 'navy', pen: 'medium' });
-  vault.setPrefs({ drawMode: 'click', ink: 'blue', pen: 'bold' });
-  vault.setPrefs({ drawMode: 'nope', ink: 'pink', pen: 'huge' });
-  assert.deepEqual(vault.getPrefs(), { drawMode: 'click', ink: 'blue', pen: 'bold' });
+  assert.deepEqual(vault.getPrefs(), { drawMode: 'drag', ink: 'navy', pen: 'medium', panel: 'm', fill: { city: '', name: '', doc: '' }, rubrica: { dx: 40, dy: 56, w: 58, withSigned: false } });
+  vault.setPrefs({ drawMode: 'click', ink: 'blue', pen: 'bold', panel: 'p', fill: { city: '', name: '', doc: '' }, rubrica: { dx: 40, dy: 56, w: 58, withSigned: false } });
+  vault.setPrefs({ drawMode: 'nope', ink: 'pink', pen: 'huge', panel: 'xl' });
+  assert.deepEqual(vault.getPrefs(), { drawMode: 'click', ink: 'blue', pen: 'bold', panel: 'p', fill: { city: '', name: '', doc: '' }, rubrica: { dx: 40, dy: 56, w: 58, withSigned: false } });
 });
 
 test('apagar do cofre: some, audita e não apaga duas vezes', () => {

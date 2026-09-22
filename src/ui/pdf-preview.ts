@@ -4,7 +4,7 @@
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import 'pdfjs-dist/legacy/build/pdf.worker.mjs'; // registra globalThis.pdfjsWorker → "fake worker"
 
-type PdfDoc = Awaited<ReturnType<typeof pdfjs.getDocument>['promise']>;
+export type PdfDoc = Awaited<ReturnType<typeof pdfjs.getDocument>['promise']>;
 
 export interface PageView {
   scale: number;

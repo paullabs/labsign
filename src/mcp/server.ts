@@ -31,10 +31,16 @@ import {
   uiConfirm,
   uiCancel,
   uiFinish,
+  uiRemoveDocument,
+  uiDeliver,
+  uiSaveCopy,
+  uiSaveJob,
+  uiUndo,
+  uiReceipt,
   type Session,
 } from '../core/sessions.ts';
 import { listSignatures } from '../core/vault.ts';
-import { locateSignatureSpot, assertPdfReadable } from '../core/anchors.ts';
+import { locateSignatureSpot } from '../core/anchors.ts';
 import { errorPayload, LabsignError } from '../core/errors.ts';
 import { VERSION } from '../version.ts';
 
@@ -70,21 +76,36 @@ export async function startMcpServer(): Promise<void> {
       .describe('ABSOLUTE path of the PDF on disk. If the user only attached the PDF in the conversation (you have no path), omit it: the labsign screen asks the user to drop or pick the file.'),
     anchor_text: z.string().max(200).optional().describe('Text of the user’s signature block, e.g. "CONTRATANTE" or "Signature". The signature goes on the line right above it.'),
     placement: placementSchema.optional().describe('Explicit starting position (the user can still move it); if omitted, anchor_text is used'),
+    initials_all_pages: z
+      .boolean()
+      .optional()
+      .describe('Set when the user asked to initial ("rubricar") every page too. The screen starts with initials on every page turned on; the user draws or picks the initials and can still turn it off.'),
+    place_and_date: z
+      .boolean()
+      .optional()
+      .describe('Set when the user asked to write the place and date (e.g. "São Paulo, 22 de setembro de 2026") next to the signature. The screen starts with it turned on; the user checks the text.'),
   });
 
   /** Posição proposta. Sem âncora no PDF, propõe a última página: a pessoa ajusta arrastando. */
   async function openSignSession(args: z.infer<typeof signInput>): Promise<Session> {
+    const s = await openSignDocument(args);
+    s.hints = { initials: Boolean(args.initials_all_pages), placeDate: Boolean(args.place_and_date) };
+    return s;
+  }
+
+  async function openSignDocument(args: z.infer<typeof signInput>): Promise<Session> {
     if (!args.file) return createAwaitingSignSession({ anchorText: args.anchor_text, client: clientName() });
     if (!isAbsolute(args.file)) throw new LabsignError('FILE_NOT_ABSOLUTE');
     if (args.placement) {
       const p = args.placement;
       const bytes = readPdf(args.file);
-      await assertPdfReadable(bytes); // com senha ou danificado: erro claro agora, não na hora de confirmar
-      return prepareSignSession({ file: args.file, bytes, placements: [{ pageIndex: p.page - 1, x: p.x, y: p.y, width: p.width }], anchor: null, client: clientName() });
+      // com senha ou danificado: erro claro agora, não na hora de confirmar; os blocos achados entram na lista da tela
+      const { spots, pageCount } = await locateSignatureSpot(bytes, null);
+      return prepareSignSession({ file: args.file, bytes, placements: [{ pageIndex: p.page - 1, x: p.x, y: p.y, width: p.width }], anchor: null, spots, pageCount, client: clientName() });
     }
     const bytes = readPdf(args.file); // erros claros (arquivo sumiu, não é PDF) antes de procurar a âncora
-    const { placement, anchor } = await locateSignatureSpot(bytes, args.anchor_text || 'CONTRATANTE');
-    return prepareSignSession({ file: args.file, bytes, placements: [placement], anchor, client: clientName() });
+    const { placement, anchor, spots, pageCount } = await locateSignatureSpot(bytes, args.anchor_text || 'CONTRATANTE');
+    return prepareSignSession({ file: args.file, bytes, placements: [placement], anchor, spots, pageCount, client: clientName() });
   }
 
   const note = (s: Session) =>
@@ -259,10 +280,57 @@ export async function startMcpServer(): Promise<void> {
       viewTool('upload_document', { name: z.string(), size: z.number().int().min(1), offset: z.number().int().min(0), data: z.string() }, (s, b) => uiUploadChunk(s, b));
       viewTool('save_signature', { label: z.string().optional(), kind: z.string().optional(), strokes: z.array(z.array(z.array(z.number()))) }, (s, b) => uiSaveSignature(s, b));
       viewTool('delete_signature', { id: z.string() }, (s, b) => uiDeleteSignature(s, b));
-      viewTool('set_prefs', { drawMode: z.enum(['click', 'drag']).optional(), ink: z.string().optional(), pen: z.string().optional() }, (s, b) => uiSetPrefs(s, b));
-      viewTool('confirm', { signatureId: z.string(), placements: z.array(placement).optional(), ink: z.string().optional(), pen: z.string().optional() }, (s, b) => uiConfirm(s, b));
+      viewTool(
+        'set_prefs',
+        {
+          drawMode: z.enum(['click', 'drag']).optional(),
+          ink: z.string().optional(),
+          pen: z.string().optional(),
+          panel: z.enum(['p', 'm', 'g']).optional(),
+          fill: z.object({ city: z.string().max(80).optional(), name: z.string().max(80).optional(), doc: z.string().max(80).optional() }).optional(),
+          rubrica: z.object({ dx: z.number().optional(), dy: z.number().optional(), w: z.number().optional(), withSigned: z.boolean().optional() }).optional(),
+        },
+        (s, b) => uiSetPrefs(s, b),
+      );
+      const textItem = z.object({ pageIndex: z.number().int().min(0), x: z.number(), y: z.number(), size: z.number().optional(), lines: z.array(z.string().max(120)).max(4) });
+      viewTool(
+        'confirm',
+        {
+          signatureId: z.string(),
+          placements: z.array(placement).max(500).optional(),
+          ink: z.string().optional(),
+          pen: z.string().optional(),
+          initials: z.object({ signatureId: z.string(), placements: z.array(placement).max(500) }).optional(),
+          texts: z.array(textItem).max(4).optional(),
+        },
+        (s, b) => uiConfirm(s, b),
+      );
       viewTool('signed_document', { offset: z.number().int().min(0).optional(), length: z.number().int().min(1).optional() }, (s, b) => uiSignedChunk(s, b));
       viewTool('reveal', {}, (s) => uiReveal(s));
+      viewTool('remove_document', {}, (s) => uiRemoveDocument(s));
+      viewTool(
+        'deliver',
+        {
+          action: z.enum(['open', 'reveal', 'copy', 'mail', 'whatsapp']),
+          client: z.enum(['apple-mail', 'outlook', 'gmail', 'default']).optional(),
+          phone: z.string().max(40).optional(),
+          subject: z.string().max(300).optional(),
+          body: z.string().max(2000).optional(),
+          text: z.string().max(1000).optional(),
+        },
+        (s, b) => uiDeliver(s, b),
+      );
+      viewTool('save_copy', { prompt: z.string().max(200).optional() }, (s, b) => uiSaveCopy(s, b));
+      viewTool('save_job', { wait_ms: z.number().int().min(0).max(25000).optional() }, (s, b) => uiSaveJob(s, b));
+      viewTool('undo', {}, (s) => uiUndo(s));
+      viewTool('receipt', { lang: z.enum(['pt', 'en']).optional() }, (s, b) => uiReceipt(s, b));
+      // plano B do painel: a mesma tela no navegador (tela grande). O link com o token vai direto ao navegador, não ao modelo.
+      viewTool('open_in_browser', {}, async (s) => {
+        if (s.status !== 'pending') return { opened: false, status: s.status };
+        await ensureHttp();
+        if (s.openPages > 0) return { opened: true, already: true };
+        return { opened: await openInBrowser(sessionUrl(s)) };
+      });
       viewTool('cancel', {}, (s) => uiCancel(s));
       viewTool('finish', {}, (s) => uiFinish(s));
     } else {

@@ -4,13 +4,29 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { basename, dirname, extname, join, sep } from 'node:path';
 import { EventEmitter } from 'node:events';
-import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
-import { LabsignError } from './errors.ts';
-import { stampSignature, hasDigitalSignature } from './stamp.ts';
-import { locateSignatureSpot, type AnchorInfo } from './anchors.ts';
+import { LabsignError, errorPayload, type ErrorPayload } from './errors.ts';
+import { stampSignature, hasDigitalSignature, type StampText } from './stamp.ts';
+import { makeReceipt } from './receipt.ts';
+import { langFrom } from '../i18n/messages.ts';
+import { VERSION } from '../version.ts';
+import { locateSignatureSpot, type AnchorInfo, type SpotInfo } from './anchors.ts';
+import {
+  deliveryOptions,
+  openFile,
+  revealFile,
+  openUrl,
+  copyFileToClipboard,
+  saveAsDialog,
+  copyTo,
+  mailWithAttachment,
+  gmailComposeUrl,
+  whatsappUrl,
+  moveToTrash,
+  type MailClient,
+} from './deliver.ts';
 import { fitPlacement, type Placement } from './placement.ts';
-import { strokesToSignature, penOptions, inkRgb, isInk, isPen, type Stroke } from './signature.ts';
+import { strokesToSignature, penOptions, inkRgb, isInk, isPen, type Stroke, type Pen } from './signature.ts';
 import {
   loadSignature,
   saveSignature,
@@ -21,6 +37,7 @@ import {
   setPrefs,
   sha256,
   audit,
+  countAuditEvents,
   type SignatureMeta,
 } from './vault.ts';
 
@@ -37,6 +54,31 @@ export interface SignResult {
   signatures_saved?: number;
   audit_id?: string;
   original_preserved_as_prefix?: boolean;
+  /** Onde a assinatura entrou, com o rótulo do bloco quando é um dos da lista ("CONTRATANTE"). */
+  places?: { page: number; label: string | null }[];
+  /** Em quantas páginas entrou a rubrica. */
+  initials_pages?: number;
+  /** Textos escritos junto (local e data). */
+  texts?: number;
+}
+
+/** Uma linha do histórico da tela ("assinado às 14:32", "e-mail aberto no Apple Mail"). A tela traduz pelo evento. */
+export interface HistoryEntry {
+  at: string;
+  event: 'created' | 'document' | 'removed' | 'signed' | 'undone' | 'saved_copy' | 'opened_file' | 'revealed' | 'copied' | 'mail' | 'whatsapp' | 'receipt';
+  detail?: Record<string, string | number>;
+}
+
+/** "Salvar uma cópia em…": a janela do sistema espera a pessoa; a tela acompanha pelo estado da tarefa. */
+export interface SaveJob {
+  id: number;
+  state: 'running' | 'done' | 'cancelled' | 'error';
+  file?: string;
+  name?: string;
+  folder?: string;
+  /** O nome escolhido já existia: a cópia ganhou outro nome ("-2") em vez de substituir. */
+  renamed?: boolean;
+  error?: ErrorPayload;
 }
 
 export interface Session {
@@ -68,6 +110,21 @@ export interface Session {
   awaiting: boolean;
   uploaded: boolean;
   upload: { name: string; size: number; parts: Buffer[]; received: number } | null;
+  /** Blocos de assinatura achados no documento (a lista "Onde assinar" da tela). */
+  spots: SpotInfo[];
+  pageCount: number | null;
+  history: HistoryEntry[];
+  job: SaveJob | null;
+  /** Número desta assinatura no registro do computador (depois de assinar). */
+  registryNo: number | null;
+  /** Temporizadores de expiração: desfazer a assinatura reabre o pedido e os rearma. */
+  timers: ReturnType<typeof setTimeout>[];
+  /** O que a IA sugeriu ao abrir (a pessoa pediu rubrica, local e data): a tela já começa com isso ligado. */
+  hints: { initials: boolean; placeDate: boolean };
+  /** Com que desenho e traço foi assinado (para o comprovante). */
+  signedWith: { signatureId: string; pen: Pen } | null;
+  /** Comprovante já gerado para esta assinatura. */
+  receipt: string | null;
 }
 
 const sessions = new Map<string, Session>();
@@ -122,16 +179,37 @@ export function createSession({ kind, client, closeOnSave = true }: { kind: Sess
     awaiting: false,
     uploaded: false,
     upload: null,
+    spots: [],
+    pageCount: null,
+    history: [],
+    job: null,
+    registryNo: null,
+    timers: [],
+    hints: { initials: false, placeDate: false },
+    signedWith: null,
+    receipt: null,
   };
   sessions.set(s.id, s);
-  setTimeout(() => {
-    if (s.status !== 'pending') return;
-    // cofre com algo salvo conta como concluído, igual ao botão "Concluir"
-    if (s.kind === 'pad' && s.saved.length) uiFinish(s);
-    else finish(s, 'expired', null);
-  }, TTL_MS).unref();
+  note(s, 'created');
+  armTtl(s);
   return s;
 }
+
+/** Pedido esquecido aberto expira (cofre com algo salvo conta como concluído, igual ao botão "Concluir"). */
+function armTtl(s: Session): void {
+  s.timers.push(
+    setTimeout(() => {
+      if (s.status !== 'pending') return;
+      if (s.kind === 'pad' && s.saved.length) uiFinish(s);
+      else finish(s, 'expired', null);
+    }, TTL_MS).unref(),
+  );
+}
+
+const note = (s: Session, event: HistoryEntry['event'], detail?: HistoryEntry['detail']) => {
+  s.history.push({ at: new Date().toISOString(), event, ...(detail ? { detail } : {}) });
+  if (s.history.length > 100) s.history.splice(1, s.history.length - 100); // guarda o começo e o recente
+};
 
 export const getSession = (id: string): Session | undefined => sessions.get(id);
 
@@ -142,9 +220,22 @@ function finish(s: Session, status: SessionStatus, result: SignResult | null): b
   s.result = result;
   s.upload = null;
   bus.emit(s.id);
-  setTimeout(() => (s.original = null), RETAIN_MS).unref();
-  setTimeout(() => sessions.delete(s.id), FORGET_MS).unref();
+  s.timers.push(setTimeout(() => (s.original = null), RETAIN_MS).unref(), setTimeout(() => sessions.delete(s.id), FORGET_MS).unref());
   return true;
+}
+
+/** Desfazer a assinatura: o pedido volta a ficar aberto, com o mesmo documento. */
+function reopen(s: Session): void {
+  for (const t of s.timers) clearTimeout(t);
+  s.timers = [];
+  s.status = 'pending';
+  s.result = null;
+  s.registryNo = null;
+  s.job = null;
+  s.signedWith = null;
+  s.receipt = null;
+  bus.emit(s.id);
+  armTtl(s);
 }
 
 /** Uma aba abriu a tela deste pedido (primeira vez ou recarregando). */
@@ -218,6 +309,9 @@ export function uiState(s: Session) {
           hasDigitalSignature: s.hasDigitalSignature,
           anchor: s.anchor,
           placements: s.placements,
+          spots: s.spots,
+          pages: s.pageCount,
+          hints: s.hints,
         };
   }
   return {
@@ -227,8 +321,26 @@ export function uiState(s: Session) {
     document,
     signatures: listSignaturesForUi(),
     prefs: getPrefs(),
+    history: s.history,
+    ...(s.kind === 'sign'
+      ? {
+          delivery: deliveryOptions(),
+          // número desta assinatura no registro do computador (a próxima, enquanto não assina)
+          registryNo: s.registryNo ?? safeCount() + 1,
+          job: s.job,
+          receipt: s.receipt && existsSync(s.receipt) ? basename(s.receipt) : null,
+        }
+      : {}),
   };
 }
+
+const safeCount = (): number => {
+  try {
+    return countAuditEvents('document_signed');
+  } catch {
+    return 0;
+  }
+};
 
 // ---------------------------------------------------------------- abertura
 /** Lê o PDF do disco com erros claros — antes de qualquer outra coisa (âncoras, prévia) tocar nos bytes. */
@@ -256,12 +368,16 @@ export function prepareSignSession({
   bytes = readPdf(file),
   placements,
   anchor = null,
+  spots = [],
+  pageCount = null,
   client,
 }: {
   file: string;
   bytes?: Buffer;
   placements: Placement[];
   anchor?: AnchorInfo | null;
+  spots?: SpotInfo[];
+  pageCount?: number | null;
   client: string;
 }): Session {
   const s = createSession({ kind: 'sign', client });
@@ -269,7 +385,10 @@ export function prepareSignSession({
   s.original = bytes; // a prévia mostra exatamente os bytes que serão assinados
   s.placements = placements;
   s.anchor = anchor;
+  s.spots = spots;
+  s.pageCount = pageCount;
   s.hasDigitalSignature = hasDigitalSignature(bytes);
+  note(s, 'document', { name: basename(file), ...(pageCount ? { pages: pageCount } : {}) });
   return s;
 }
 
@@ -335,17 +454,40 @@ export async function uiUploadChunk(s: Session, { name, size, offset = 0, data }
   const bytes = Buffer.concat(u.parts);
   s.upload = null;
   checkPdf(bytes);
-  const { placement, anchor } = await locateSignatureSpot(bytes, s.anchorText);
+  const { placement, anchor, spots, pageCount } = await locateSignatureSpot(bytes, s.anchorText);
   if (s.status !== 'pending') throw new LabsignError('SESSION_CLOSED', { status: s.status }); // cancelado enquanto lia o PDF
   s.original = bytes;
   s.file = join(outputDir(), u.name); // só para nomear a saída: o original não é gravado em lugar nenhum
   s.placements = [placement];
   s.anchor = anchor;
+  s.spots = spots;
+  s.pageCount = pageCount;
   s.hasDigitalSignature = hasDigitalSignature(bytes);
   s.awaiting = false;
   s.uploaded = true;
+  note(s, 'document', { name: u.name, pages: pageCount });
   audit({ event: 'document_received', name: u.name, bytes: bytes.length, sha256: sha256(bytes), client: s.client });
   return { received: size, total: size, done: true };
+}
+
+/**
+ * "Remover" / "Trocar" o documento: o pedido volta a esperar um PDF. Só tira o documento desta tela —
+ * o arquivo no computador fica onde está. (A cópia assinada que a tela gerar depois vai para a pasta de saída.)
+ */
+export function uiRemoveDocument(s: Session) {
+  if (s.kind !== 'sign') throw new LabsignError('NOT_A_SIGN_SESSION');
+  if (s.status !== 'pending' || s.signing) throw new LabsignError('SESSION_CLOSED', { status: s.signing ? 'signing' : s.status });
+  if (s.awaiting) return { removed: false };
+  const name = s.file ? basename(s.file) : '';
+  s.anchorText ??= s.anchor?.text ?? 'CONTRATANTE';
+  Object.assign(s, { original: null, file: null, placements: null, anchor: null, spots: [], pageCount: null, hasDigitalSignature: false, awaiting: true, uploaded: false, upload: null });
+  note(s, 'removed', { name });
+  try {
+    audit({ event: 'document_removed', name, client: s.client });
+  } catch (e) {
+    console.error('[labsign] documento removido, mas o registro de auditoria falhou:', (e as Error)?.message ?? e);
+  }
+  return { removed: true, name };
 }
 
 export const uiSetPrefs = (_s: Session, prefs: Record<string, unknown>) => setPrefs(prefs);
@@ -412,11 +554,42 @@ function sanitizePlacements(list: unknown) {
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
 
+/** Textos para escrever na página (local e data, nome, CPF): poucos, curtos, dentro de uma página. */
+function sanitizeTexts(list: unknown): StampText[] {
+  if (list == null) return [];
+  if (!Array.isArray(list) || list.length > 4) throw new LabsignError('INVALID_PLACEMENT');
+  return list.map((t) => {
+    const q = { pageIndex: Number(t?.pageIndex), x: Number(t?.x), y: Number(t?.y), size: Number(t?.size ?? 10) };
+    const lines: string[] = Array.isArray(t?.lines) ? t.lines.slice(0, 4).map((l: unknown) => String(l ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, 120)) : [];
+    if (!Number.isInteger(q.pageIndex) || q.pageIndex < 0 || ![q.x, q.y, q.size].every(Number.isFinite) || q.size < 6 || q.size > 24 || !lines.some((l) => l.trim())) {
+      throw new LabsignError('INVALID_PLACEMENT');
+    }
+    return { ...q, lines };
+  });
+}
+
+/** Cada lugar assinado, com o rótulo do bloco da lista quando cai nele. */
+function placeLabels(s: Session, placements: { pageIndex: number; x: number; y: number; width: number }[]) {
+  return placements.map((p) => {
+    // o bloco cuja linha (a base proposta) fica logo abaixo do topo da assinatura, na mesma coluna
+    const spot = s.spots.find((sp) => {
+      const base = sp.placement.bottom ?? sp.placement.y ?? 0;
+      return sp.placement.pageIndex === p.pageIndex && Math.abs(sp.placement.x - p.x) < 80 && base >= p.y - 20 && base <= p.y + 160;
+    });
+    return { page: p.pageIndex + 1, label: spot?.label ?? null };
+  });
+}
+
 /**
- * Carimba. placements (opcional) é a posição final que o humano ajustou na prévia;
- * sem ela, usa a posição proposta. ink/pen: cor e espessura escolhidas (padrão: preferências).
+ * Carimba. placements (opcional) é a posição final que o humano ajustou na prévia — um ou mais lugares;
+ * sem ela, usa a posição proposta. initials: a rubrica (outro desenho do cofre) em várias páginas.
+ * texts: local e data (e nome/CPF) escritos na página. Tudo num salvamento incremental só.
+ * ink/pen: cor e espessura escolhidas (padrão: preferências).
  */
-export async function uiConfirm(s: Session, { signatureId, placements, ink, pen }: { signatureId: string; placements?: unknown; ink?: unknown; pen?: unknown }) {
+export async function uiConfirm(
+  s: Session,
+  { signatureId, placements, ink, pen, initials, texts }: { signatureId: string; placements?: unknown; ink?: unknown; pen?: unknown; initials?: { signatureId?: string; placements?: unknown } | null; texts?: unknown },
+) {
   if (s.kind !== 'sign') throw new LabsignError('NOT_A_SIGN_SESSION');
   if (s.status !== 'pending' || s.signing) throw new LabsignError('SESSION_CLOSED', { status: s.signing ? 'signing' : s.status });
   if (s.awaiting || !s.original || !s.file || !s.placements) throw new LabsignError('NO_DOCUMENT');
@@ -430,12 +603,25 @@ export async function uiConfirm(s: Session, { signatureId, placements, ink, pen 
   const signature = strokesToSignature(record.strokes, penOptions(penKey));
   const aspect = signature.height / signature.width;
   const chosen = Array.isArray(placements) && placements.length ? sanitizePlacements(placements) : s.placements.map((p) => fitPlacement(p, aspect));
+  const initialsRecord = initials ? loadSignature(String(initials.signatureId ?? '')) : null;
+  const initialsPlacements = initials ? sanitizePlacements(initials.placements) : [];
+  const writing = sanitizeTexts(texts);
+  const color = inkRgb(inkKey);
   const original = s.original;
   const file = s.file;
 
   s.signing = true; // daqui até gravar há um await: uma segunda confirmação não pode passar pelo mesmo caminho
   try {
-    const { bytes } = await stampSignature({ pdfBytes: original, signature, placements: chosen, mode: 'incremental', color: inkRgb(inkKey) });
+    const { bytes } = await stampSignature({
+      pdfBytes: original,
+      groups: [
+        { signature, placements: chosen, color },
+        ...(initialsRecord ? [{ signature: strokesToSignature(initialsRecord.strokes, penOptions(penKey)), placements: initialsPlacements, color }] : []),
+      ],
+      texts: writing,
+      mode: 'incremental',
+      color,
+    });
     // cancelado, expirado ou aba fechada enquanto carimbava: não grava nada
     if (s.status !== 'pending') throw new LabsignError('SESSION_CLOSED', { status: s.status });
     const outPath = nextOutputPath(file);
@@ -443,9 +629,12 @@ export async function uiConfirm(s: Session, { signatureId, placements, ink, pen 
 
     // o arquivo já existe: daqui em diante nada pode deixar o pedido pendurado (uma nova tentativa geraria "-2")
     const pages = [...new Set(chosen.map((p) => p.pageIndex + 1))];
+    const places = placeLabels(s, chosen);
+    const initialsPages = [...new Set(initialsPlacements.map((p) => p.pageIndex + 1))];
     let auditId: string | undefined;
     try {
       markSignatureUsed(record.id);
+      if (initialsRecord) markSignatureUsed(initialsRecord.id);
       auditId = audit({
         event: 'document_signed',
         file: s.uploaded ? null : file,
@@ -459,16 +648,25 @@ export async function uiConfirm(s: Session, { signatureId, placements, ink, pen 
         pen: penKey,
         pages,
         placements: chosen.map((p) => ({ page: p.pageIndex + 1, x: r1(p.x), y: r1(p.y), width: r1(p.width) })),
+        // rubrica e textos: o que entrou e onde (o conteúdo dos textos fica só no PDF, não no registro)
+        ...(initialsRecord ? { initials: { signature: initialsRecord.id, label: initialsRecord.label, pages: initialsPages } } : {}),
+        ...(writing.length ? { texts: writing.map((t) => ({ page: t.pageIndex + 1, lines: t.lines.length })) } : {}),
         client: s.client,
       }).hash.slice(0, 12);
     } catch (e) {
       console.error('[labsign] assinado, mas o registro de auditoria falhou:', (e as Error)?.message ?? e);
     }
+    s.registryNo = safeCount();
+    s.signedWith = { signatureId: record.id, pen: penKey };
+    note(s, 'signed', { name: basename(outPath), page: pages[0], folder: folderLabel(dirname(outPath)), ...(pages.length > 1 ? { places: pages.length } : {}), ...(initialsPages.length ? { initials: initialsPages.length } : {}) });
     finish(s, 'signed', {
       signed_file: outPath,
       sha256_original: sha256(original),
       sha256_signed: sha256(bytes),
       pages,
+      places,
+      ...(initialsPages.length ? { initials_pages: initialsPages.length } : {}),
+      ...(writing.length ? { texts: writing.length } : {}),
       signature_label: record.label,
       audit_id: auditId,
       original_preserved_as_prefix: true,
@@ -494,33 +692,205 @@ export const uiSignedChunk = (s: Session, { offset, length }: { offset?: number;
 /** Abre a pasta com o arquivo assinado selecionado (Finder, Explorer ou o gerenciador de arquivos). */
 export async function uiReveal(s: Session) {
   const file = signedPath(s);
-  if (process.env.LABSIGN_NO_OPEN === '1') return { revealed: false, file };
-  const win = process.platform === 'win32';
-  const [cmd, args]: [string, string[]] =
-    process.platform === 'darwin' ? ['open', ['-R', file]] : win ? ['explorer.exe', [`/select,"${file}"`]] : ['xdg-open', [dirname(file)]];
-  // o Explorer não entende o argumento que o Node monta ("/select,C:\...\com espaço"): vai como está
-  const revealed = await startDetached(cmd, args, { windowsVerbatimArguments: win });
+  const revealed = await revealFile(file);
+  if (revealed) note(s, 'revealed');
   return { revealed, file };
 }
 
+export type DeliverAction = 'open' | 'reveal' | 'copy' | 'mail' | 'whatsapp';
+
 /**
- * Dispara um programa (navegador, gerenciador de arquivos) sem esperar por ele.
- * Comando inexistente (xdg-open ausente no Linux/WSL) chega como evento 'error': sem ouvinte, derrubaria o processo.
+ * Entrega pelo computador. O servidor faz o que o painel do chat não faz: anexar num e-mail novo
+ * (Apple Mail, Outlook), pôr o arquivo na área de transferência, abrir o Gmail ou o WhatsApp com o
+ * arquivo à mão (copiado e à vista na pasta). Enviar, quem envia é sempre a pessoa, no app dela.
  */
-export function startDetached(cmd: string, args: string[], extra: { windowsVerbatimArguments?: boolean } = {}): Promise<boolean> {
-  return new Promise((resolve) => {
-    try {
-      const child = spawn(cmd, args, { stdio: 'ignore', detached: true, windowsHide: true, ...extra });
-      child.once('error', () => resolve(false));
-      child.once('spawn', () => {
-        child.unref();
-        resolve(true);
-      });
-    } catch {
-      resolve(false);
+export async function uiDeliver(
+  s: Session,
+  { action, client, phone, subject, body, text }: { action: DeliverAction; client?: MailClient; phone?: string; subject?: string; body?: string; text?: string },
+) {
+  const file = signedPath(s);
+  if (!existsSync(file)) throw new LabsignError('SIGNED_FILE_MISSING', { file });
+  const clip = (v: unknown, max: number) => String(v ?? '').slice(0, max);
+  const opts = deliveryOptions();
+  switch (action) {
+    case 'open': {
+      const done = await openFile(file);
+      if (done) note(s, 'opened_file');
+      return { done, file };
     }
-  });
+    case 'reveal': {
+      const done = await revealFile(file);
+      if (done) note(s, 'revealed');
+      return { done, file };
+    }
+    case 'copy': {
+      if (!opts.copy) throw new LabsignError('DELIVERY_UNAVAILABLE');
+      const done = await copyFileToClipboard(file);
+      if (done) note(s, 'copied');
+      return { done, file };
+    }
+    case 'mail': {
+      if (!client || !opts.mail.includes(client)) throw new LabsignError('DELIVERY_UNAVAILABLE');
+      if (client === 'gmail') {
+        // o Gmail na web não recebe anexo por link: o PDF vai copiado e à vista, e o Gmail abre por último (fica na frente)
+        const copied = await copyFileToClipboard(file);
+        const revealed = await revealFile(file);
+        const done = await openUrl(gmailComposeUrl(clip(subject, 300), clip(body, 2000)));
+        if (done) note(s, 'mail', { client });
+        return { done, copied, revealed, guided: true, file };
+      }
+      const done = await mailWithAttachment(client, file, clip(subject, 300), clip(body, 2000));
+      if (done) note(s, 'mail', { client });
+      return { done, attached: done, file };
+    }
+    case 'whatsapp': {
+      // não há como anexar por link: o PDF vai copiado e à vista na pasta; o WhatsApp abre por último
+      const digits = String(phone ?? '').replace(/\D/g, '').slice(0, 15);
+      const copied = await copyFileToClipboard(file);
+      const revealed = await revealFile(file);
+      const done = await openUrl(whatsappUrl(digits, clip(text, 1000), opts.whatsappApp));
+      if (done) note(s, 'whatsapp', { via: opts.whatsappApp ? 'app' : 'web' });
+      return { done, copied, revealed, guided: true, via: opts.whatsappApp ? 'app' : 'web', file };
+    }
+  }
+  throw new LabsignError('DELIVERY_UNAVAILABLE');
 }
+
+/**
+ * "Salvar uma cópia em…": abre a janela de salvar do sistema e devolve na hora — a janela espera a
+ * pessoa o tempo que ela quiser, e a tela acompanha por uiSaveJob (uma chamada presa até a pessoa
+ * escolher estouraria o limite de tempo do app de chat).
+ */
+export function uiSaveCopy(s: Session, { prompt }: { prompt?: string } = {}): SaveJob {
+  const signed = signedPath(s);
+  if (!existsSync(signed)) throw new LabsignError('SIGNED_FILE_MISSING', { file: signed });
+  if (s.job?.state === 'running') return { ...s.job };
+  const job: SaveJob = { id: (s.job?.id ?? 0) + 1, state: 'running' };
+  s.job = job;
+  void (async () => {
+    try {
+      const dest = await saveAsDialog(String(prompt || 'Save a copy of the signed PDF').slice(0, 200), basename(signed), dirname(signed));
+      if (!dest) job.state = 'cancelled';
+      else {
+        const { file: target, renamed } = copyTo(signed, dest);
+        Object.assign(job, { state: 'done', file: target, name: basename(target), folder: folderLabel(dirname(target)), renamed });
+        note(s, 'saved_copy', { name: basename(target), folder: folderLabel(dirname(target)) });
+      }
+    } catch (e) {
+      job.state = 'error';
+      job.error = errorPayload(e);
+    } finally {
+      bus.emit(`job:${s.id}`);
+    }
+  })();
+  return { ...job };
+}
+
+/** Estado da última "cópia em…"; com wait_ms, espera (até 25 s) ela terminar. */
+export async function uiSaveJob(s: Session, { wait_ms }: { wait_ms?: number } = {}) {
+  const wait = Math.min(Math.max(Number(wait_ms) || 0, 0), 25000);
+  if (s.job?.state === 'running' && wait > 0) {
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        bus.off(`job:${s.id}`, done);
+        resolve();
+      };
+      const timer = setTimeout(done, wait);
+      bus.once(`job:${s.id}`, done);
+    });
+  }
+  return s.job ? { ...s.job } : { id: 0, state: 'none' as const };
+}
+
+/** "arquivo.pdf" livre: se já existe, "arquivo-2.pdf", "arquivo-3.pdf"… (nunca substitui nada). */
+function freePath(wanted: string): string {
+  const ext = extname(wanted);
+  const stem = ext ? wanted.slice(0, -ext.length) : wanted;
+  let file = wanted;
+  for (let n = 2; existsSync(file); n++) file = `${stem}-${n}${ext}`;
+  return file;
+}
+
+const platformName = () => ({ darwin: 'macOS', win32: 'Windows', linux: 'Linux' })[process.platform as string] ?? process.platform;
+
+/**
+ * Comprovante: um PDF à parte, ao lado da cópia assinada ("….comprovante.pdf"), com data e hora,
+ * onde entrou a assinatura, o desenho usado e os SHA-256 do original e do assinado. Abre na hora.
+ */
+export async function uiReceipt(s: Session, { lang }: { lang?: string } = {}) {
+  const signed = signedPath(s);
+  if (!existsSync(signed)) throw new LabsignError('SIGNED_FILE_MISSING', { file: signed });
+  // já existe para esta assinatura: abre o mesmo, em vez de espalhar comprovantes iguais pela pasta
+  if (s.receipt && existsSync(s.receipt)) {
+    const opened = await openFile(s.receipt);
+    return { file: s.receipt, name: basename(s.receipt), folder: folderLabel(dirname(s.receipt)), opened, again: true };
+  }
+  const r = s.result!;
+  let signature = null;
+  try {
+    if (s.signedWith) signature = strokesToSignature(loadSignature(s.signedWith.signatureId).strokes, penOptions(s.signedWith.pen));
+  } catch {} // apagada do cofre depois de assinar: o comprovante sai sem o desenho
+  const signedAt = [...s.history].reverse().find((h) => h.event === 'signed')?.at ?? new Date().toISOString();
+  const bytes = await makeReceipt({
+    lang: langFrom(lang),
+    documentName: s.file ? basename(s.file) : basename(signed),
+    pageCount: s.pageCount,
+    signedName: basename(signed),
+    folder: folderLabel(dirname(signed)),
+    signedAt,
+    sha256Original: r.sha256_original ?? '',
+    sha256Signed: r.sha256_signed ?? '',
+    places: r.places ?? (r.pages ?? []).map((page) => ({ page, label: null })),
+    initialsPages: r.initials_pages ?? 0,
+    texts: r.texts ?? 0,
+    signature,
+    signatureLabel: r.signature_label ?? '',
+    registryNo: s.registryNo,
+    auditId: r.audit_id ?? null,
+    version: VERSION,
+    platform: platformName(),
+  });
+  const ext = extname(signed);
+  const file = freePath(`${ext ? signed.slice(0, -ext.length) : signed}.comprovante.pdf`);
+  writeFileSync(file, bytes, { flag: 'wx' });
+  s.receipt = file;
+  try {
+    audit({ event: 'receipt_created', output: file, sha256_signed: r.sha256_signed, sha256_receipt: sha256(bytes), client: s.client });
+  } catch (e) {
+    console.error('[labsign] comprovante gerado, mas o registro de auditoria falhou:', (e as Error)?.message ?? e);
+  }
+  note(s, 'receipt', { name: basename(file) });
+  const opened = await openFile(file);
+  return { file, name: basename(file), folder: folderLabel(dirname(file)), opened, again: false };
+}
+
+/**
+ * Desfazer a assinatura: a cópia assinada vai para a Lixeira (dá para recuperar), o registro de
+ * evidências ganha uma linha (nada é apagado dele) e o pedido volta a ficar aberto com o mesmo
+ * documento. Cópias que a pessoa já salvou em outro lugar ou enviou continuam onde estão.
+ */
+export async function uiUndo(s: Session) {
+  const file = signedPath(s);
+  if (!s.original) throw new LabsignError('UNDO_EXPIRED'); // passou 1 h: o original já saiu da memória
+  const result = s.result!;
+  let trashed = false;
+  if (existsSync(file)) {
+    trashed = await moveToTrash(file);
+    if (!trashed && existsSync(file)) throw new LabsignError('TRASH_FAILED', { file });
+  }
+  // o comprovante descreve uma cópia que não existe mais: vai junto (se não der, fica — não impede desfazer)
+  if (s.receipt && existsSync(s.receipt)) await moveToTrash(s.receipt).catch(() => false);
+  try {
+    audit({ event: 'signature_undone', output: file, sha256_signed: result.sha256_signed, trashed, client: s.client });
+  } catch (e) {
+    console.error('[labsign] desfeito, mas o registro de auditoria falhou:', (e as Error)?.message ?? e);
+  }
+  reopen(s);
+  note(s, 'undone', { name: basename(file), trashed: trashed ? 1 : 0 });
+  return { ...publicState(s), undone_file: file, trashed };
+}
+
 
 // ---------------------------------------------------------------- fim da tela
 /** Carência depois do aviso de aba fechada: recarregar a página reabre a sessão antes disso. */
@@ -557,6 +927,28 @@ function onceClosed(id: string, ms: number): Promise<void> {
     const timer = setTimeout(done, ms);
     bus.once(`close:${id}`, done);
   });
+}
+
+/**
+ * Depois de assinar, a tela ainda serve para salvar, enviar ou desfazer: espera ela fechar (com a mesma
+ * carência de recarregar) ou a pessoa desfazer a assinatura, que reabre o pedido — o que vier primeiro.
+ */
+export async function waitAfterSigned(id: string, ms: number, graceMs = CLOSE_GRACE_MS): Promise<'closed' | 'reopened' | 'timeout'> {
+  const s = sessions.get(id);
+  const deadline = Date.now() + ms;
+  const nap = (t: number) => new Promise((r) => setTimeout(r, Math.max(0, Math.min(t, deadline - Date.now()))));
+  // o status muda por fora (a tela desfaz) enquanto este laço dorme: lê sempre de novo
+  const status = (): SessionStatus | undefined => s?.status;
+  while (s && Date.now() < deadline) {
+    if (status() === 'pending') return 'reopened';
+    if (s.closed) {
+      await nap(graceMs);
+      if (s.closed && status() !== 'pending') return 'closed';
+      continue;
+    }
+    await nap(400);
+  }
+  return status() === 'pending' ? 'reopened' : 'timeout';
 }
 
 /**

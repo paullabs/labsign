@@ -9,3 +9,7 @@ out/
 # (o link da tela ia para o modelo). Só os resultados são publicados.
 spike/*
 !spike/RESULTADOS.md
+
+# rodadas e capturas da ferramenta de design (impeccable): locais, não vão para o repositório
+.impeccable/review/
+.impeccable/questions/

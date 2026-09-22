@@ -22,11 +22,17 @@ import {
   uiFinish,
   uiClose,
   uiUploadChunk,
+  uiRemoveDocument,
+  uiDeliver,
+  uiSaveCopy,
+  uiSaveJob,
+  uiUndo,
+  uiReceipt,
   pageOpened,
-  startDetached,
   MAX_UPLOAD,
   type Session,
 } from '../core/sessions.ts';
+import { startDetached } from '../core/deliver.ts';
 import { audit } from '../core/vault.ts';
 
 /** A tela montada: ao lado deste arquivo no pacote, ou em dist/ quando roda do código-fonte. */
@@ -200,6 +206,18 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
           return json(res, 200, await uiConfirm(s, body as any));
         case 'reveal':
           return json(res, 200, await uiReveal(s));
+        case 'remove_document':
+          return json(res, 200, uiRemoveDocument(s));
+        case 'deliver':
+          return json(res, 200, await uiDeliver(s, body as any));
+        case 'save_copy':
+          return json(res, 200, uiSaveCopy(s, body as any));
+        case 'save_job':
+          return json(res, 200, await uiSaveJob(s, body as any));
+        case 'undo':
+          return json(res, 200, await uiUndo(s));
+        case 'receipt':
+          return json(res, 200, await uiReceipt(s, body as any));
         case 'cancel':
           return json(res, 200, uiCancel(s));
         case 'finish':
