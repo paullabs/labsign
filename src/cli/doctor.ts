@@ -18,6 +18,8 @@ const T = {
     found: 'encontrado',
     notFound: 'não encontrado',
     configured: 'já configurado',
+    configuredVersion: (v: string) => `instalado (v${v})`,
+    disabled: 'instalado, mas desativado — habilite em Configurações → Extensões',
     desktopHow: 'instale o arquivo labsign.mcpb (dois cliques) ou acrescente em "mcpServers" do arquivo',
     codeHow: 'rode',
     codexHow: 'rode',
@@ -34,6 +36,8 @@ const T = {
     found: 'found',
     notFound: 'not found',
     configured: 'already configured',
+    configuredVersion: (v: string) => `installed (v${v})`,
+    disabled: 'installed, but disabled — enable it in Settings → Extensions',
     desktopHow: 'install the labsign.mcpb file (double-click) or add under "mcpServers" in',
     codeHow: 'run',
     codexHow: 'run',
@@ -52,18 +56,44 @@ function onPath(cmd: string): boolean {
   }
 }
 
-const desktopConfigPath = (): string =>
-  process.platform === 'darwin'
-    ? join(homedir(), 'Library/Application Support/Claude/claude_desktop_config.json')
+// LABSIGN_CLAUDE_DIR: só para os testes isolarem a pasta do Claude Desktop, como LABSIGN_HOME faz com o cofre.
+const claudeConfigDir = (): string =>
+  process.env.LABSIGN_CLAUDE_DIR ||
+  (process.platform === 'darwin'
+    ? join(homedir(), 'Library/Application Support/Claude')
     : process.platform === 'win32'
-      ? join(process.env.APPDATA ?? homedir(), 'Claude/claude_desktop_config.json')
-      : join(homedir(), '.config/Claude/claude_desktop_config.json');
+      ? join(process.env.APPDATA ?? homedir(), 'Claude')
+      : join(homedir(), '.config/Claude'));
+
+const desktopConfigPath = (): string => join(claudeConfigDir(), 'claude_desktop_config.json');
 
 function mentionsLabsign(file: string): boolean {
   try {
     return /labsign/.test(readFileSync(file, 'utf8'));
   } catch {
     return false;
+  }
+}
+
+/**
+ * O Claude Desktop moderno instala .mcpb como extensão própria (pasta "Claude Extensions"),
+ * não editando "mcpServers" no config — checar só o config dava falso negativo com tudo funcionando.
+ */
+function desktopExtension(): { installed: boolean; enabled: boolean; version?: string } {
+  try {
+    const raw = JSON.parse(readFileSync(join(claudeConfigDir(), 'extensions-installations.json'), 'utf8'));
+    const installs = raw?.extensions ?? raw; // formato visto: { extensions: { "<id>": {...} } }
+    const entry = Object.values(installs as Record<string, any>).find((e: any) => e?.manifest?.name === 'labsign') as any;
+    if (!entry) return { installed: false, enabled: false };
+    let enabled = true; // sem arquivo de settings = habilitada por padrão
+    try {
+      enabled = JSON.parse(readFileSync(join(claudeConfigDir(), 'Claude Extensions Settings', `${entry.id}.json`), 'utf8')).isEnabled ?? true;
+    } catch {
+      /* padrão: habilitada */
+    }
+    return { installed: true, enabled, version: entry.version };
+  } catch {
+    return { installed: false, enabled: false };
   }
 }
 
@@ -95,7 +125,9 @@ export function doctor(lang: Lang): string {
 
   lines.push(t.connect);
   const desktop = desktopConfigPath();
-  lines.push(`• Claude Desktop [${status(existsSync(desktop), mentionsLabsign(desktop))}] — ${t.desktopHow}`, `    ${desktop}`, `    "labsign": ${serverJson}`);
+  const ext = desktopExtension();
+  const desktopStatus = ext.installed ? (ext.enabled ? t.configuredVersion(ext.version ?? '?') : t.disabled) : status(existsSync(desktop), mentionsLabsign(desktop));
+  lines.push(`• Claude Desktop [${desktopStatus}] — ${t.desktopHow}`, `    ${desktop}`, `    "labsign": ${serverJson}`);
   lines.push(`• Claude Code [${status(onPath('claude'), false)}] — ${t.codeHow}:`, `    claude mcp add labsign -- "${node}" "${script}" mcp`);
   const codexConfig = join(homedir(), '.codex/config.toml');
   lines.push(

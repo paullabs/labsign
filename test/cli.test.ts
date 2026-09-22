@@ -32,6 +32,33 @@ test('lista vazia e doctor com cofre isolado', () => {
   }
 });
 
+test('doctor detecta a extensão instalada no Claude Desktop moderno (pasta "Claude Extensions", não mcpServers)', () => {
+  const home = tempDir();
+  const claudeDir = tempDir();
+  try {
+    // sem nada instalado: cai no diagnóstico antigo (config não existe)
+    const bare = run(['doctor'], { LABSIGN_HOME: home, LABSIGN_CLAUDE_DIR: claudeDir, LABSIGN_LANG: 'pt' });
+    assert.match(bare, /Claude Desktop \[não encontrado\]/);
+
+    // extensão instalada e habilitada
+    writeFileSync(
+      join(claudeDir, 'extensions-installations.json'),
+      JSON.stringify({ extensions: { 'local.mcpb.alguem.labsign': { id: 'local.mcpb.alguem.labsign', version: '9.9.9', manifest: { name: 'labsign' } } } }),
+    );
+    const installed = run(['doctor'], { LABSIGN_HOME: home, LABSIGN_CLAUDE_DIR: claudeDir, LABSIGN_LANG: 'pt' });
+    assert.match(installed, /Claude Desktop \[instalado \(v9\.9\.9\)\]/);
+
+    // extensão instalada mas desativada pela pessoa
+    mkdirSync(join(claudeDir, 'Claude Extensions Settings'), { recursive: true });
+    writeFileSync(join(claudeDir, 'Claude Extensions Settings', 'local.mcpb.alguem.labsign.json'), JSON.stringify({ isEnabled: false }));
+    const disabled = run(['doctor'], { LABSIGN_HOME: home, LABSIGN_CLAUDE_DIR: claudeDir, LABSIGN_LANG: 'en' });
+    assert.match(disabled, /Claude Desktop \[installed, but disabled/);
+  } finally {
+    cleanup(home);
+    cleanup(claudeDir);
+  }
+});
+
 test('arquivo que não existe ou não é PDF: mensagem clara na língua da pessoa, sem abrir tela', () => {
   const home = tempDir();
   const fail = (args: string[], lang: string) => {

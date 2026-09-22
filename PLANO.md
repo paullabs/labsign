@@ -391,6 +391,10 @@ Três revisões independentes: segurança, robustez do núcleo, tela e acessibil
 
 **Publicado em 22/09/2026:** repositório [paullabs/labsign](https://github.com/paullabs/labsign) no ar (commit `eca0f4d`), tag e Release `v0.1.0` com o `.mcpb` anexado (SHA-256 conferido baixando de volta da Release). Dependabot já abriu PRs de atualização das actions no mesmo dia.
 
+**Teste manual no Claude Desktop: feito e confirmado (22/09/2026).** O Paulo instalou o `.mcpb` (v0.1.1) no Claude Desktop real (2.2553.1), pediu para assinar um PDF numa conversa nova, e **o painel abriu dentro do chat** — a tela embutida via MCP Apps funciona de ponta a ponta no host real, não só nos testes automatizados. Confirmado por dois caminhos independentes: (1) o relato do Paulo; (2) evidência no próprio sistema de arquivos — `~/.labsign` foi criado com a migração das 2 assinaturas do protótipo cerca de 1 minuto depois da instalação, o que só acontece quando a tela chama de verdade a ferramenta interna `labsign_view_state`.
+
+Isso também revelou um bug de diagnóstico (não de segurança): o Claude Desktop moderno instala `.mcpb` como extensão própria, numa pasta `Claude Extensions/` com metadados em `extensions-installations.json` — **não** editando `mcpServers` no `claude_desktop_config.json` como o `doctor` assumia. `doctor` dizia "not found" com tudo funcionando. Corrigido: `doctor` agora lê os dois formatos e mostra a versão instalada (ou avisa se a extensão está desativada). `LABSIGN_CLAUDE_DIR` isola essa checagem nos testes, como `LABSIGN_HOME` já fazia com o cofre.
+
 **Falta — depende do Paulo**
 - **Teste manual no Claude Desktop:** instalar o `.mcpb`, pedir para assinar um PDF e ver o painel abrir dentro da conversa. Conferir também se o Claude Desktop roda a extensão com o Node dele, sem pedir instalação.
 - **npm:** reservar e publicar `labsign` (nome livre em 21/09/2026); trocar o `.mcp.json` do plugin por `npx -y labsign@<versão> mcp` (hoje o servidor do plugin é montado localmente e fica fora do git, então instalar o plugin direto do GitHub ainda não funciona).
