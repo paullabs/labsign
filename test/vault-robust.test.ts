@@ -92,7 +92,7 @@ test('assinatura corrompida ou incompleta não derruba a lista', () => {
 });
 
 test('config.json inválido ("null", lista, prefs nulo, lixo): preferências padrão', () => {
-  const defaults = { drawMode: 'drag', ink: 'navy', pen: 'medium' };
+  const defaults = { drawMode: 'drag', ink: 'navy', pen: 'medium', panel: 'm', fill: { city: '', name: '', doc: '' }, rubrica: { dx: 40, dy: 56, w: 58, withSigned: false } };
   for (const content of ['null', '[1,2]', '{"prefs":null}', '{"prefs":"x"}', '42', '{nope']) {
     writeFileSync(join(home, 'config.json'), content);
     assert.deepEqual(vault.getPrefs(), defaults, content);

@@ -21,6 +21,10 @@ const note = (metafile) => {
 
 // ---- a tela: duas variantes (a do navegador não carrega o SDK de MCP Apps)
 const shell = readFileSync(join(root, 'src/ui/index.html'), 'utf8');
+// a letra estreita dos rótulos (Archivo Narrow, OFL) vai embutida: a tela é um HTML só, sem nada de fora
+const FONT_PKG = '@fontsource/archivo-narrow';
+const font = readFileSync(join(root, 'node_modules', FONT_PKG, 'files/archivo-narrow-latin-600-normal.woff2')).toString('base64');
+bundled.add(FONT_PKG);
 for (const [file, mcpApp] of [['ui.html', false], ['ui-app.html', true]]) {
   const result = await build({
     entryPoints: [join(root, 'src/ui/main.ts')],
@@ -31,7 +35,7 @@ for (const [file, mcpApp] of [['ui.html', false], ['ui-app.html', true]]) {
     write: false,
     metafile: true,
     legalComments: 'none',
-    define: { __MCP_APP__: String(mcpApp) },
+    define: { __MCP_APP__: String(mcpApp), __LABSIGN_FONT__: JSON.stringify(font) },
     logOverride: { 'empty-import-meta': 'silent' }, // import.meta só aparece num ramo do PDF.js exclusivo do Node
   });
   note(result.metafile);

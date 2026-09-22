@@ -20,6 +20,10 @@ export type ErrorCode =
   | 'INVALID_ID'
   | 'SIGNATURE_NOT_FOUND'
   | 'NOT_SIGNED_YET'
+  | 'SIGNED_FILE_MISSING'
+  | 'TRASH_FAILED'
+  | 'UNDO_EXPIRED'
+  | 'DELIVERY_UNAVAILABLE'
   | 'UPLOAD_EMPTY'
   | 'UPLOAD_TOO_BIG'
   | 'UPLOAD_OUT_OF_ORDER'
@@ -52,6 +56,10 @@ const EN: Record<ErrorCode, (p: ErrorParams) => string> = {
   INVALID_ID: () => 'invalid signature id',
   SIGNATURE_NOT_FOUND: () => 'signature not found',
   NOT_SIGNED_YET: () => 'the document has not been signed yet',
+  SIGNED_FILE_MISSING: (p) => `the signed file is no longer at ${p.file}`,
+  TRASH_FAILED: (p) => `could not move ${p.file} to the trash`,
+  UNDO_EXPIRED: () => 'too late to undo from this screen; delete the signed copy from its folder',
+  DELIVERY_UNAVAILABLE: () => 'that option is not available on this computer',
   UPLOAD_EMPTY: () => 'the file is empty',
   UPLOAD_TOO_BIG: (p) => `the PDF is larger than ${p.mb} MB`,
   UPLOAD_OUT_OF_ORDER: () => 'chunk out of order; send the file again',

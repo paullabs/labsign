@@ -1,0 +1,860 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-22T21:14:35+00:00",
+  "title": "Design System: labsign",
+  "extensions": {
+    "colorMeta": {
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta de Impressão",
+        "canonical": "#15205c",
+        "tonalRamp": [
+          "oklch(15.0% 0.108 269.9)",
+          "oklch(26.4% 0.108 269.9)",
+          "oklch(37.9% 0.108 269.9)",
+          "oklch(49.3% 0.108 269.9)",
+          "oklch(60.7% 0.108 269.9)",
+          "oklch(72.1% 0.108 269.9)",
+          "oklch(83.6% 0.108 269.9)",
+          "oklch(95.0% 0.108 269.9)"
+        ]
+      },
+      "tinta-2": {
+        "role": "neutral",
+        "displayName": "Tinta Leve",
+        "canonical": "#414b7e",
+        "tonalRamp": [
+          "oklch(15.0% 0.085 273.9)",
+          "oklch(26.4% 0.085 273.9)",
+          "oklch(37.9% 0.085 273.9)",
+          "oklch(49.3% 0.085 273.9)",
+          "oklch(60.7% 0.085 273.9)",
+          "oklch(72.1% 0.085 273.9)",
+          "oklch(83.6% 0.085 273.9)",
+          "oklch(95.0% 0.085 273.9)"
+        ]
+      },
+      "pauta": {
+        "role": "neutral",
+        "displayName": "Pauta",
+        "canonical": "#737a9e",
+        "tonalRamp": [
+          "oklch(15.0% 0.056 276.0)",
+          "oklch(26.4% 0.056 276.0)",
+          "oklch(37.9% 0.056 276.0)",
+          "oklch(49.3% 0.056 276.0)",
+          "oklch(60.7% 0.056 276.0)",
+          "oklch(72.1% 0.056 276.0)",
+          "oklch(83.6% 0.056 276.0)",
+          "oklch(95.0% 0.056 276.0)"
+        ]
+      },
+      "pauta-leve": {
+        "role": "neutral",
+        "displayName": "Pauta Leve",
+        "canonical": "#cfd2e2",
+        "tonalRamp": [
+          "oklch(15.0% 0.022 277.4)",
+          "oklch(26.4% 0.022 277.4)",
+          "oklch(37.9% 0.022 277.4)",
+          "oklch(49.3% 0.022 277.4)",
+          "oklch(60.7% 0.022 277.4)",
+          "oklch(72.1% 0.022 277.4)",
+          "oklch(83.6% 0.022 277.4)",
+          "oklch(95.0% 0.022 277.4)"
+        ]
+      },
+      "carbono": {
+        "role": "primary",
+        "displayName": "Azul de Carbono",
+        "canonical": "#3a3fb2",
+        "tonalRamp": [
+          "oklch(15.0% 0.179 274.4)",
+          "oklch(26.4% 0.179 274.4)",
+          "oklch(37.9% 0.179 274.4)",
+          "oklch(49.3% 0.179 274.4)",
+          "oklch(60.7% 0.179 274.4)",
+          "oklch(72.1% 0.179 274.4)",
+          "oklch(83.6% 0.179 274.4)",
+          "oklch(95.0% 0.179 274.4)"
+        ]
+      },
+      "carbono-forte": {
+        "role": "primary",
+        "displayName": "Carbono Forte",
+        "canonical": "#2c3093",
+        "tonalRamp": [
+          "oklch(15.0% 0.159 273.9)",
+          "oklch(26.4% 0.159 273.9)",
+          "oklch(37.9% 0.159 273.9)",
+          "oklch(49.3% 0.159 273.9)",
+          "oklch(60.7% 0.159 273.9)",
+          "oklch(72.1% 0.159 273.9)",
+          "oklch(83.6% 0.159 273.9)",
+          "oklch(95.0% 0.159 273.9)"
+        ]
+      },
+      "carbono-leve": {
+        "role": "primary",
+        "displayName": "Carbono Leve",
+        "canonical": "#e4e5f7",
+        "tonalRamp": [
+          "oklch(15.0% 0.024 283.4)",
+          "oklch(26.4% 0.024 283.4)",
+          "oklch(37.9% 0.024 283.4)",
+          "oklch(49.3% 0.024 283.4)",
+          "oklch(60.7% 0.024 283.4)",
+          "oklch(72.1% 0.024 283.4)",
+          "oklch(83.6% 0.024 283.4)",
+          "oklch(95.0% 0.024 283.4)"
+        ]
+      },
+      "carbono-tinta": {
+        "role": "primary",
+        "displayName": "Branco sobre Carbono",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 0.0)",
+          "oklch(26.4% 0.000 0.0)",
+          "oklch(37.9% 0.000 0.0)",
+          "oklch(49.3% 0.000 0.0)",
+          "oklch(60.7% 0.000 0.0)",
+          "oklch(72.1% 0.000 0.0)",
+          "oklch(83.6% 0.000 0.0)",
+          "oklch(95.0% 0.000 0.0)"
+        ]
+      },
+      "numeradora": {
+        "role": "secondary",
+        "displayName": "Vermelho de Numeradora",
+        "canonical": "#bd2a1f",
+        "tonalRamp": [
+          "oklch(15.0% 0.185 29.3)",
+          "oklch(26.4% 0.185 29.3)",
+          "oklch(37.9% 0.185 29.3)",
+          "oklch(49.3% 0.185 29.3)",
+          "oklch(60.7% 0.185 29.3)",
+          "oklch(72.1% 0.185 29.3)",
+          "oklch(83.6% 0.185 29.3)",
+          "oklch(95.0% 0.185 29.3)"
+        ]
+      },
+      "numeradora-leve": {
+        "role": "secondary",
+        "displayName": "Numeradora Leve",
+        "canonical": "#f9e4e1",
+        "tonalRamp": [
+          "oklch(15.0% 0.023 27.3)",
+          "oklch(26.4% 0.023 27.3)",
+          "oklch(37.9% 0.023 27.3)",
+          "oklch(49.3% 0.023 27.3)",
+          "oklch(60.7% 0.023 27.3)",
+          "oklch(72.1% 0.023 27.3)",
+          "oklch(83.6% 0.023 27.3)",
+          "oklch(95.0% 0.023 27.3)"
+        ]
+      },
+      "canhoto": {
+        "role": "tertiary",
+        "displayName": "Canário de 2ª Via",
+        "canonical": "#f4e8a6",
+        "tonalRamp": [
+          "oklch(15.0% 0.085 99.1)",
+          "oklch(26.4% 0.085 99.1)",
+          "oklch(37.9% 0.085 99.1)",
+          "oklch(49.3% 0.085 99.1)",
+          "oklch(60.7% 0.085 99.1)",
+          "oklch(72.1% 0.085 99.1)",
+          "oklch(83.6% 0.085 99.1)",
+          "oklch(95.0% 0.085 99.1)"
+        ]
+      },
+      "canhoto-2": {
+        "role": "tertiary",
+        "displayName": "Canário Fundo",
+        "canonical": "#eadb8a",
+        "tonalRamp": [
+          "oklch(15.0% 0.103 99.0)",
+          "oklch(26.4% 0.103 99.0)",
+          "oklch(37.9% 0.103 99.0)",
+          "oklch(49.3% 0.103 99.0)",
+          "oklch(60.7% 0.103 99.0)",
+          "oklch(72.1% 0.103 99.0)",
+          "oklch(83.6% 0.103 99.0)",
+          "oklch(95.0% 0.103 99.0)"
+        ]
+      },
+      "via": {
+        "role": "neutral",
+        "displayName": "Via",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 0.0)",
+          "oklch(26.4% 0.000 0.0)",
+          "oklch(37.9% 0.000 0.0)",
+          "oklch(49.3% 0.000 0.0)",
+          "oklch(60.7% 0.000 0.0)",
+          "oklch(72.1% 0.000 0.0)",
+          "oklch(83.6% 0.000 0.0)",
+          "oklch(95.0% 0.000 0.0)"
+        ]
+      },
+      "chao": {
+        "role": "neutral",
+        "displayName": "Chão",
+        "canonical": "#e3e5ee",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 276.1)",
+          "oklch(26.4% 0.012 276.1)",
+          "oklch(37.9% 0.012 276.1)",
+          "oklch(49.3% 0.012 276.1)",
+          "oklch(60.7% 0.012 276.1)",
+          "oklch(72.1% 0.012 276.1)",
+          "oklch(83.6% 0.012 276.1)",
+          "oklch(95.0% 0.012 276.1)"
+        ]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 0.0)",
+          "oklch(26.4% 0.000 0.0)",
+          "oklch(37.9% 0.000 0.0)",
+          "oklch(49.3% 0.000 0.0)",
+          "oklch(60.7% 0.000 0.0)",
+          "oklch(72.1% 0.000 0.0)",
+          "oklch(83.6% 0.000 0.0)",
+          "oklch(95.0% 0.000 0.0)"
+        ]
+      },
+      "ink-navy": {
+        "role": "neutral",
+        "displayName": "Tinta da Assinatura: Azul-marinho",
+        "canonical": "#0d1a59",
+        "tonalRamp": [
+          "oklch(15.0% 0.114 267.8)",
+          "oklch(26.4% 0.114 267.8)",
+          "oklch(37.9% 0.114 267.8)",
+          "oklch(49.3% 0.114 267.8)",
+          "oklch(60.7% 0.114 267.8)",
+          "oklch(72.1% 0.114 267.8)",
+          "oklch(83.6% 0.114 267.8)",
+          "oklch(95.0% 0.114 267.8)"
+        ]
+      },
+      "ink-blue": {
+        "role": "neutral",
+        "displayName": "Tinta da Assinatura: Azul",
+        "canonical": "#1f3fa8",
+        "tonalRamp": [
+          "oklch(15.0% 0.173 265.9)",
+          "oklch(26.4% 0.173 265.9)",
+          "oklch(37.9% 0.173 265.9)",
+          "oklch(49.3% 0.173 265.9)",
+          "oklch(60.7% 0.173 265.9)",
+          "oklch(72.1% 0.173 265.9)",
+          "oklch(83.6% 0.173 265.9)",
+          "oklch(95.0% 0.173 265.9)"
+        ]
+      },
+      "ink-black": {
+        "role": "neutral",
+        "displayName": "Tinta da Assinatura: Preto",
+        "canonical": "#161616",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 0.0)",
+          "oklch(26.4% 0.000 0.0)",
+          "oklch(37.9% 0.000 0.0)",
+          "oklch(49.3% 0.000 0.0)",
+          "oklch(60.7% 0.000 0.0)",
+          "oklch(72.1% 0.000 0.0)",
+          "oklch(83.6% 0.000 0.0)",
+          "oklch(95.0% 0.000 0.0)"
+        ]
+      },
+      "tinta-escuro": {
+        "role": "neutral",
+        "displayName": "Tinta de Impressão (escuro)",
+        "canonical": "#e8eaf7",
+        "tonalRamp": [
+          "oklch(15.0% 0.018 279.1)",
+          "oklch(26.4% 0.018 279.1)",
+          "oklch(37.9% 0.018 279.1)",
+          "oklch(49.3% 0.018 279.1)",
+          "oklch(60.7% 0.018 279.1)",
+          "oklch(72.1% 0.018 279.1)",
+          "oklch(83.6% 0.018 279.1)",
+          "oklch(95.0% 0.018 279.1)"
+        ]
+      },
+      "tinta-2-escuro": {
+        "role": "neutral",
+        "displayName": "Tinta Leve (escuro)",
+        "canonical": "#b3b8d6",
+        "tonalRamp": [
+          "oklch(15.0% 0.043 277.9)",
+          "oklch(26.4% 0.043 277.9)",
+          "oklch(37.9% 0.043 277.9)",
+          "oklch(49.3% 0.043 277.9)",
+          "oklch(60.7% 0.043 277.9)",
+          "oklch(72.1% 0.043 277.9)",
+          "oklch(83.6% 0.043 277.9)",
+          "oklch(95.0% 0.043 277.9)"
+        ]
+      },
+      "pauta-escuro": {
+        "role": "neutral",
+        "displayName": "Pauta (escuro)",
+        "canonical": "#6f76a8",
+        "tonalRamp": [
+          "oklch(15.0% 0.077 277.6)",
+          "oklch(26.4% 0.077 277.6)",
+          "oklch(37.9% 0.077 277.6)",
+          "oklch(49.3% 0.077 277.6)",
+          "oklch(60.7% 0.077 277.6)",
+          "oklch(72.1% 0.077 277.6)",
+          "oklch(83.6% 0.077 277.6)",
+          "oklch(95.0% 0.077 277.6)"
+        ]
+      },
+      "pauta-leve-escuro": {
+        "role": "neutral",
+        "displayName": "Pauta Leve (escuro)",
+        "canonical": "#30345e",
+        "tonalRamp": [
+          "oklch(15.0% 0.073 277.7)",
+          "oklch(26.4% 0.073 277.7)",
+          "oklch(37.9% 0.073 277.7)",
+          "oklch(49.3% 0.073 277.7)",
+          "oklch(60.7% 0.073 277.7)",
+          "oklch(72.1% 0.073 277.7)",
+          "oklch(83.6% 0.073 277.7)",
+          "oklch(95.0% 0.073 277.7)"
+        ]
+      },
+      "carbono-escuro": {
+        "role": "primary",
+        "displayName": "Azul de Carbono (escuro)",
+        "canonical": "#9ca1f5",
+        "tonalRamp": [
+          "oklch(15.0% 0.121 280.4)",
+          "oklch(26.4% 0.121 280.4)",
+          "oklch(37.9% 0.121 280.4)",
+          "oklch(49.3% 0.121 280.4)",
+          "oklch(60.7% 0.121 280.4)",
+          "oklch(72.1% 0.121 280.4)",
+          "oklch(83.6% 0.121 280.4)",
+          "oklch(95.0% 0.121 280.4)"
+        ]
+      },
+      "carbono-forte-escuro": {
+        "role": "primary",
+        "displayName": "Carbono Forte (escuro)",
+        "canonical": "#b7bbf8",
+        "tonalRamp": [
+          "oklch(15.0% 0.086 281.4)",
+          "oklch(26.4% 0.086 281.4)",
+          "oklch(37.9% 0.086 281.4)",
+          "oklch(49.3% 0.086 281.4)",
+          "oklch(60.7% 0.086 281.4)",
+          "oklch(72.1% 0.086 281.4)",
+          "oklch(83.6% 0.086 281.4)",
+          "oklch(95.0% 0.086 281.4)"
+        ]
+      },
+      "carbono-leve-escuro": {
+        "role": "primary",
+        "displayName": "Carbono Leve (escuro)",
+        "canonical": "#262a55",
+        "tonalRamp": [
+          "oklch(15.0% 0.077 276.8)",
+          "oklch(26.4% 0.077 276.8)",
+          "oklch(37.9% 0.077 276.8)",
+          "oklch(49.3% 0.077 276.8)",
+          "oklch(60.7% 0.077 276.8)",
+          "oklch(72.1% 0.077 276.8)",
+          "oklch(83.6% 0.077 276.8)",
+          "oklch(95.0% 0.077 276.8)"
+        ]
+      },
+      "carbono-tinta-escuro": {
+        "role": "primary",
+        "displayName": "Branco sobre Carbono (escuro)",
+        "canonical": "#0b0d1e",
+        "tonalRamp": [
+          "oklch(15.0% 0.036 276.8)",
+          "oklch(26.4% 0.036 276.8)",
+          "oklch(37.9% 0.036 276.8)",
+          "oklch(49.3% 0.036 276.8)",
+          "oklch(60.7% 0.036 276.8)",
+          "oklch(72.1% 0.036 276.8)",
+          "oklch(83.6% 0.036 276.8)",
+          "oklch(95.0% 0.036 276.8)"
+        ]
+      },
+      "numeradora-escuro": {
+        "role": "secondary",
+        "displayName": "Vermelho de Numeradora (escuro)",
+        "canonical": "#ff8a7e",
+        "tonalRamp": [
+          "oklch(15.0% 0.144 27.1)",
+          "oklch(26.4% 0.144 27.1)",
+          "oklch(37.9% 0.144 27.1)",
+          "oklch(49.3% 0.144 27.1)",
+          "oklch(60.7% 0.144 27.1)",
+          "oklch(72.1% 0.144 27.1)",
+          "oklch(83.6% 0.144 27.1)",
+          "oklch(95.0% 0.144 27.1)"
+        ]
+      },
+      "numeradora-leve-escuro": {
+        "role": "secondary",
+        "displayName": "Numeradora Leve (escuro)",
+        "canonical": "#3a1f2a",
+        "tonalRamp": [
+          "oklch(15.0% 0.045 354.5)",
+          "oklch(26.4% 0.045 354.5)",
+          "oklch(37.9% 0.045 354.5)",
+          "oklch(49.3% 0.045 354.5)",
+          "oklch(60.7% 0.045 354.5)",
+          "oklch(72.1% 0.045 354.5)",
+          "oklch(83.6% 0.045 354.5)",
+          "oklch(95.0% 0.045 354.5)"
+        ]
+      },
+      "numeradora-texto-escuro": {
+        "role": "secondary",
+        "displayName": "Texto sobre Numeradora (escuro)",
+        "canonical": "#1a0b0b",
+        "tonalRamp": [
+          "oklch(15.0% 0.026 20.1)",
+          "oklch(26.4% 0.026 20.1)",
+          "oklch(37.9% 0.026 20.1)",
+          "oklch(49.3% 0.026 20.1)",
+          "oklch(60.7% 0.026 20.1)",
+          "oklch(72.1% 0.026 20.1)",
+          "oklch(83.6% 0.026 20.1)",
+          "oklch(95.0% 0.026 20.1)"
+        ]
+      },
+      "rotulo-escuro": {
+        "role": "tertiary",
+        "displayName": "Rótulo Canário (escuro)",
+        "canonical": "#ead67a",
+        "tonalRamp": [
+          "oklch(15.0% 0.115 97.4)",
+          "oklch(26.4% 0.115 97.4)",
+          "oklch(37.9% 0.115 97.4)",
+          "oklch(49.3% 0.115 97.4)",
+          "oklch(60.7% 0.115 97.4)",
+          "oklch(72.1% 0.115 97.4)",
+          "oklch(83.6% 0.115 97.4)",
+          "oklch(95.0% 0.115 97.4)"
+        ]
+      },
+      "canhoto-escuro": {
+        "role": "tertiary",
+        "displayName": "Canário de 2ª Via (escuro)",
+        "canonical": "#1d2040",
+        "tonalRamp": [
+          "oklch(15.0% 0.060 277.3)",
+          "oklch(26.4% 0.060 277.3)",
+          "oklch(37.9% 0.060 277.3)",
+          "oklch(49.3% 0.060 277.3)",
+          "oklch(60.7% 0.060 277.3)",
+          "oklch(72.1% 0.060 277.3)",
+          "oklch(83.6% 0.060 277.3)",
+          "oklch(95.0% 0.060 277.3)"
+        ]
+      },
+      "canhoto-2-escuro": {
+        "role": "tertiary",
+        "displayName": "Canário Fundo (escuro)",
+        "canonical": "#2a2e57",
+        "tonalRamp": [
+          "oklch(15.0% 0.073 277.2)",
+          "oklch(26.4% 0.073 277.2)",
+          "oklch(37.9% 0.073 277.2)",
+          "oklch(49.3% 0.073 277.2)",
+          "oklch(60.7% 0.073 277.2)",
+          "oklch(72.1% 0.073 277.2)",
+          "oklch(83.6% 0.073 277.2)",
+          "oklch(95.0% 0.073 277.2)"
+        ]
+      },
+      "via-escuro": {
+        "role": "neutral",
+        "displayName": "Via (escuro)",
+        "canonical": "#151831",
+        "tonalRamp": [
+          "oklch(15.0% 0.049 276.5)",
+          "oklch(26.4% 0.049 276.5)",
+          "oklch(37.9% 0.049 276.5)",
+          "oklch(49.3% 0.049 276.5)",
+          "oklch(60.7% 0.049 276.5)",
+          "oklch(72.1% 0.049 276.5)",
+          "oklch(83.6% 0.049 276.5)",
+          "oklch(95.0% 0.049 276.5)"
+        ]
+      },
+      "chao-escuro": {
+        "role": "neutral",
+        "displayName": "Chão (escuro)",
+        "canonical": "#0b0d1e",
+        "tonalRamp": [
+          "oklch(15.0% 0.036 276.8)",
+          "oklch(26.4% 0.036 276.8)",
+          "oklch(37.9% 0.036 276.8)",
+          "oklch(49.3% 0.036 276.8)",
+          "oklch(60.7% 0.036 276.8)",
+          "oklch(72.1% 0.036 276.8)",
+          "oklch(83.6% 0.036 276.8)",
+          "oklch(95.0% 0.036 276.8)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título da folha de entrega (\"Cópia assinada pronta\") e da tela de erro fatal. Labsign Form, caixa normal."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Folhas sobre a mesa: receber o PDF, encerrado. Labsign Form, caixa normal."
+      },
+      "title-sm": {
+        "displayName": "Title Small",
+        "purpose": "Títulos de diálogo (desenhar, desfazer). Labsign Form, caixa normal."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto base, nome do documento no canhoto, campos de texto. Fonte do sistema."
+      },
+      "body-sm": {
+        "displayName": "Body Small",
+        "purpose": "Nota do pé, notas da entrega (até 62ch), metadados, histórico, recados e avisos."
+      },
+      "body-sm-strong": {
+        "displayName": "Body Small Strong",
+        "purpose": "Nomes em listas e links do canhoto (Trocar, Remover, Desenhar nova)."
+      },
+      "body-xs": {
+        "displayName": "Body Extra Small",
+        "purpose": "Metadados de lista, a linha \"Tudo fica neste computador\", metadados no compacto."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Rótulos de botão comum, discreto, perigo e pequeno. Fonte do sistema, caixa normal."
+      },
+      "button-principal": {
+        "displayName": "Button Principal",
+        "purpose": "O botão principal: a frase do próximo passo (\"Assinar na página 13\")."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Nomes de campo e de grupo, sempre em CAIXA ALTA: DOCUMENTO, ONDE ASSINAR, GUARDAR, COR."
+      },
+      "label-lugar": {
+        "displayName": "Label Lugar",
+        "purpose": "O nome do bloco como está no contrato, em CAIXA ALTA: CONTRATANTE, TESTEMUNHA 1."
+      },
+      "numero": {
+        "displayName": "Número",
+        "purpose": "O Nº do registro em numeradora, algarismos tabulares, quatro dígitos."
+      },
+      "numero-folha": {
+        "displayName": "Número da Folha",
+        "purpose": "O número de cada página ao lado da folha, em tinta-2."
+      },
+      "carimbo": {
+        "displayName": "Carimbo",
+        "purpose": "ASSINADO e CANCELADO pequenos, em CAIXA ALTA, nas linhas do histórico."
+      },
+      "carimbo-grande": {
+        "displayName": "Carimbo Grande",
+        "purpose": "O carimbo que bate na folha de entrega e na tela de cancelado."
+      }
+    },
+    "shadows": [
+      {
+        "name": "folha-sombra",
+        "value": "0 1px 2px rgba(21, 32, 92, 0.14), 0 12px 28px -14px rgba(21, 32, 92, 0.4)",
+        "purpose": "Papel sobre a mesa: páginas do PDF, folhas de receber e de encerrado, miniatura da entrega (tema claro)."
+      },
+      {
+        "name": "folha-sombra-escuro",
+        "value": "0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 32px -12px rgba(0, 0, 0, 0.8)",
+        "purpose": "A mesma folha sobre o papel-carbono do tema escuro."
+      },
+      {
+        "name": "via-destacada",
+        "value": "-10px 0 24px -18px rgba(21, 32, 92, 0.6)",
+        "purpose": "A via que se soltou do canhoto, na borda do rasgo (talão largo)."
+      },
+      {
+        "name": "via-destacada-compacto",
+        "value": "0 -10px 24px -18px rgba(21, 32, 92, 0.6)",
+        "purpose": "A via destacada no compacto, com o picote deitado."
+      },
+      {
+        "name": "recado",
+        "value": "0 10px 30px -10px rgba(0, 0, 0, 0.45)",
+        "purpose": "O aviso rápido que flutua sobre as folhas."
+      },
+      {
+        "name": "dlg",
+        "value": "0 24px 60px -18px rgba(11, 13, 30, 0.6)",
+        "purpose": "Diálogos (desenhar, desfazer), sobre o fundo rgba(11, 13, 30, 0.45)."
+      },
+      {
+        "name": "fio",
+        "value": "0 0 0 1px var(--pauta)",
+        "purpose": "Contorno de miniaturas e da linha da assinatura (pauta ou pauta-leve). Borda, não elevação."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "A curva de todo movimento com peso (decalque, destaque, carimbo, recado)."
+      },
+      {
+        "name": "decalque",
+        "value": "0.34s var(--ease); from { opacity: 0; transform: translateY(-3px) scale(1.035); filter: blur(0.6px) }",
+        "purpose": "A assinatura pousa na página ao escolher o lugar ou a assinatura."
+      },
+      {
+        "name": "destaca",
+        "value": "0.62s var(--ease) both; 38% { transform: translateX(10px) rotate(0.45deg) }",
+        "purpose": "O momento marcante: a via se solta do canhoto pelo picote ao assinar."
+      },
+      {
+        "name": "destaca-baixo",
+        "value": "0.62s var(--ease) both; 38% { transform: translateY(9px) rotate(0.3deg) }",
+        "purpose": "O mesmo destaque no compacto, com o picote deitado."
+      },
+      {
+        "name": "carimba",
+        "value": "0.42s var(--ease) 0.3s both; from { opacity: 0; transform: rotate(-5deg) scale(1.5) } 60% { opacity: 1; transform: rotate(-5deg) scale(0.96) }",
+        "purpose": "O carimbo grande bate depois que a via começa a se soltar."
+      },
+      {
+        "name": "recado",
+        "value": "opacity 0.18s ease-out, transform 0.3s var(--ease); translate 8px -> 0",
+        "purpose": "O recado entra de baixo, sem empurrar nada."
+      },
+      {
+        "name": "gira",
+        "value": "0.7s linear infinite",
+        "purpose": "Anel de 14px no botão ocupado (\"Assinando…\", \"Abrindo…\")."
+      },
+      {
+        "name": "reduzido",
+        "value": "prefers-reduced-motion: animações e transições a 1ms; a via destacada não se move",
+        "purpose": "Movimento reduzido: o estado muda sem animação e a rolagem não suaviza."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compacto",
+        "value": "880px"
+      },
+      {
+        "name": "celular",
+        "value": "520px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "btn-principal",
+      "description": "A próxima ação, uma só por tela, no pé ou no diálogo; o texto é a frase do passo.",
+      "html": "<button class=\"ds-btn-principal\" type=\"button\">Assinar na página 13</button>",
+      "css": ".ds-btn-principal { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1.5px solid var(--tinta, #15205c); border-radius: var(--r, 3px); background: transparent; color: var(--tinta, #15205c); font: 650 13.5px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); white-space: nowrap; cursor: pointer; min-height: 44px; padding: 0 22px; border-color: var(--carbono, #3a3fb2); background: var(--carbono, #3a3fb2); color: var(--carbono-tinta, #ffffff); font-size: 15px; } .ds-btn-principal:hover { background: var(--carbono-forte, #2c3093); border-color: var(--carbono-forte, #2c3093); } .ds-btn-principal:active { transform: translateY(1px); } .ds-btn-principal:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 2px; } .ds-btn-principal:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Botão comum com ícone",
+      "kind": "button",
+      "refersTo": "btn",
+      "description": "Ações da entrega e secundárias: contorno de tinta, ícone em carbono, hover em carbono leve.",
+      "html": "<button class=\"ds-btn\" type=\"button\"><span class=\"ds-btn-icone\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6.5 3.5h7.3l3.7 3.7v13.3h-11V3.5z\"/><path d=\"M13.5 3.8v3.7h3.7\"/><path d=\"M9 12.5h6M9 15.8h6\"/></svg></span>Abrir</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1.5px solid var(--tinta, #15205c); border-radius: var(--r, 3px); background: transparent; color: var(--tinta, #15205c); font: 650 13.5px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); white-space: nowrap; cursor: pointer; } .ds-btn .ds-btn-icone { display: inline-flex; color: var(--carbono, #3a3fb2); } .ds-btn:hover { background: var(--carbono-leve, #e4e5f7); border-color: var(--carbono, #3a3fb2); color: var(--carbono, #3a3fb2); } .ds-btn:hover .ds-btn-icone { color: currentColor; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 2px; } .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Botão discreto",
+      "kind": "button",
+      "refersTo": "btn-discreto",
+      "description": "A saída (Cancelar, Voltar, Desfazer a assinatura), sempre antes da próxima ação.",
+      "html": "<button class=\"ds-btn-discreto\" type=\"button\">Cancelar</button>",
+      "css": ".ds-btn-discreto { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1.5px solid var(--tinta, #15205c); border-radius: var(--r, 3px); background: transparent; color: var(--tinta, #15205c); font: 650 13.5px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); white-space: nowrap; cursor: pointer; border-color: transparent; color: var(--tinta-2, #414b7e); } .ds-btn-discreto:hover { background: var(--carbono-leve, #e4e5f7); color: var(--tinta, #15205c); } .ds-btn-discreto:active { transform: translateY(1px); } .ds-btn-discreto:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "campo-texto",
+      "description": "Campo pautado: borda de pauta, foco em carbono; o rótulo fica em cima.",
+      "html": "<label class=\"ds-campo-form\"><span class=\"ds-campo-rotulo\">Número (opcional, com DDD)</span><input class=\"ds-campo\" type=\"tel\" placeholder=\"(11) 91234-5678\"></label>",
+      "css": ".ds-campo-form { display: grid; gap: 5px; max-width: 240px; font-family: var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); } .ds-campo-rotulo { font-size: 12px; font-weight: 600; color: var(--tinta-2, #414b7e); } .ds-campo { height: 38px; padding: 0 10px; border: 1px solid var(--pauta, #737a9e); border-radius: var(--r, 3px); background: var(--via, #ffffff); color: var(--tinta, #15205c); font: 400 15px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); caret-color: var(--carbono, #3a3fb2); } .ds-campo::placeholder { color: var(--tinta-2, #414b7e); opacity: 0.85; } .ds-campo:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 1px; border-color: var(--carbono, #3a3fb2); }"
+    },
+    {
+      "name": "Barra da via",
+      "kind": "nav",
+      "refersTo": "icone-btn",
+      "description": "Página [n] de N, ir para o lugar, zoom e Procurar; botões de ícone sem borda.",
+      "html": "<div class=\"ds-barra\"><label class=\"ds-endereco\"><span>Página</span><input value=\"13\" inputmode=\"numeric\" aria-label=\"Página\"><span>de 60</span></label><button class=\"ds-icone-btn ds-ir\" type=\"button\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"7.5\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3\"/></svg><span>Ir para a página 13</span></button><span class=\"ds-espaco\"></span><button class=\"ds-icone-btn\" type=\"button\" aria-label=\"Diminuir\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5.5 12h13\"/></svg></button><button class=\"ds-icone-btn ds-zoom\" type=\"button\">100%</button><button class=\"ds-icone-btn\" type=\"button\" aria-label=\"Aumentar\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5.5v13M5.5 12h13\"/></svg></button><button class=\"ds-icone-btn\" type=\"button\" aria-pressed=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6\"/><path d=\"M15 15l5 5\"/></svg><span>Procurar</span></button></div>",
+      "css": ".ds-barra { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; padding: 9px 16px; border-bottom: 1px solid var(--pauta-leve, #cfd2e2); background: var(--via, #ffffff); font-family: var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); } .ds-endereco { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--tinta-2, #414b7e); } .ds-endereco input { width: 3.6em; height: 30px; padding: 0 6px; text-align: center; border: 1px solid var(--pauta, #737a9e); border-radius: var(--r, 3px); background: var(--via, #ffffff); color: var(--tinta, #15205c); font: 600 15px/1 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); font-variant-numeric: tabular-nums; } .ds-endereco input:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 1px; border-color: var(--carbono, #3a3fb2); } .ds-espaco { flex: 1; } .ds-icone-btn { height: 32px; min-width: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--r, 3px); background: none; color: var(--tinta, #15205c); font: 600 13.5px/1 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); white-space: nowrap; cursor: pointer; } .ds-icone-btn:hover, .ds-icone-btn[aria-pressed=\"true\"] { background: var(--carbono-leve, #e4e5f7); color: var(--carbono, #3a3fb2); } .ds-icone-btn:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 2px; } .ds-ir { color: var(--carbono, #3a3fb2); } .ds-zoom { min-width: 52px; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Onde assinar (lugares)",
+      "kind": "chip",
+      "refersTo": "lugar-escolhido",
+      "description": "Uma linha de formulário por bloco de assinatura; o escolhido ganha o decalque de carbono.",
+      "html": "<div class=\"ds-campo-canhoto\"><h2 class=\"ds-rotulo\">Onde assinar</h2><div class=\"ds-lugares\" role=\"radiogroup\"><label class=\"ds-lugar\"><input type=\"radio\" name=\"ds-lugar\" checked><span class=\"ds-marcador\"></span><span class=\"ds-lugar-rotulo\">Contratante</span><span class=\"ds-lugar-pag\">p. 13</span><span class=\"ds-lugar-nome\">Maria Exemplo da Silva</span></label><label class=\"ds-lugar\"><input type=\"radio\" name=\"ds-lugar\"><span class=\"ds-marcador\"></span><span class=\"ds-lugar-rotulo\">Contratada</span><span class=\"ds-lugar-pag\">p. 13</span><span class=\"ds-lugar-nome\">Empresa Exemplo Ltda.</span></label><label class=\"ds-lugar\"><input type=\"radio\" name=\"ds-lugar\"><span class=\"ds-marcador\"></span><span class=\"ds-lugar-rotulo\">Outro lugar</span><span class=\"ds-lugar-pag\"></span><span class=\"ds-lugar-nome\">clique na página</span></label></div></div>",
+      "css": ".ds-campo-canhoto { width: 300px; padding: 14px 18px 16px; background: var(--canhoto, #f4e8a6); color: var(--tinta, #15205c); font: 400 15px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); } .ds-rotulo { margin: 0 0 9px; font: 600 11.5px/1.2 var(--fonte-form, \"Labsign Form\", \"Arial Narrow\", \"Helvetica Neue\", system-ui, sans-serif); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rotulo, var(--tinta, #15205c)); } .ds-lugares { display: grid; gap: 2px; } .ds-lugar { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; column-gap: 10px; align-items: baseline; padding: 8px 8px 8px 6px; margin: 0 -8px 0 -6px; border-radius: var(--r, 3px); cursor: pointer; } .ds-lugar:hover { background: var(--canhoto-2, #eadb8a); } .ds-lugar input { position: absolute; opacity: 0; pointer-events: none; } .ds-marcador { align-self: center; width: 14px; height: 14px; border: 1.5px solid var(--pauta, #737a9e); border-radius: 50%; box-sizing: border-box; } .ds-lugar-rotulo { font: 600 13.5px/1.25 var(--fonte-form, \"Labsign Form\", \"Arial Narrow\", \"Helvetica Neue\", system-ui, sans-serif); letter-spacing: 0.04em; text-transform: uppercase; } .ds-lugar-nome { grid-column: 2; font-size: 13.5px; color: var(--tinta-2, #414b7e); } .ds-lugar-pag { grid-column: 3; grid-row: 1; font-size: 13.5px; color: var(--tinta-2, #414b7e); font-variant-numeric: tabular-nums; } .ds-lugar:has(input:checked) { background: var(--carbono-leve, #e4e5f7); } .ds-lugar:has(input:checked) .ds-marcador { border: 4.5px solid var(--carbono, #3a3fb2); } .ds-lugar:has(input:checked) .ds-lugar-rotulo, .ds-lugar:has(input:checked) .ds-lugar-pag { color: var(--carbono, #3a3fb2); } .ds-lugar:has(input:focus-visible) { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 1px; }"
+    },
+    {
+      "name": "Canhoto: topo e documento",
+      "kind": "card",
+      "refersTo": "campo",
+      "description": "O canhoto canário: marca e Nº em vermelho de numeradora, campo pautado do documento, links Trocar e Remover.",
+      "html": "<aside class=\"ds-canhoto\"><header class=\"ds-c-topo\"><span class=\"ds-marca\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 2.8l5.6 8.4L12 21.2 6.4 11.2 12 2.8z\"/><path d=\"M12 12.6v8.6\"/><circle cx=\"12\" cy=\"11\" r=\"1.5\"/></svg>labsign</span><span class=\"ds-numero\">Nº 0007</span></header><section class=\"ds-campo-doc\"><h2 class=\"ds-rotulo\">Documento</h2><div class=\"ds-doc\"><span class=\"ds-doc-thumb\"></span><div><p class=\"ds-doc-nome\">Contrato de Prestação de Serviços.pdf</p><p class=\"ds-doc-meta\">60 páginas · ~/Downloads</p></div></div><div class=\"ds-campo-acoes\"><button class=\"ds-link-btn\" type=\"button\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4.5 8.5h13.5\"/><path d=\"M14.5 5l3.5 3.5-3.5 3.5\"/><path d=\"M19.5 15.5H6\"/><path d=\"M9.5 12L6 15.5 9.5 19\"/></svg>Trocar</button><button class=\"ds-link-btn\" type=\"button\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6.5 6.5l11 11M17.5 6.5l-11 11\"/></svg>Remover</button></div></section></aside>",
+      "css": ".ds-canhoto { width: 300px; background: var(--canhoto, #f4e8a6); color: var(--tinta, #15205c); font: 400 15px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); } .ds-c-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px 12px; border-bottom: 1px solid var(--pauta, #737a9e); } .ds-marca { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; letter-spacing: -0.01em; } .ds-marca svg { color: var(--carbono, #3a3fb2); } .ds-numero { font: 600 14px/1 var(--fonte-form, \"Labsign Form\", \"Arial Narrow\", \"Helvetica Neue\", system-ui, sans-serif); letter-spacing: 0.06em; color: var(--numeradora, #bd2a1f); font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-campo-doc { padding: 14px 18px 16px; } .ds-rotulo { margin: 0 0 9px; font: 600 11.5px/1.2 var(--fonte-form, \"Labsign Form\", \"Arial Narrow\", \"Helvetica Neue\", system-ui, sans-serif); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rotulo, var(--tinta, #15205c)); } .ds-doc { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: start; padding-bottom: 10px; border-bottom: 1px solid var(--pauta, #737a9e); } .ds-doc-thumb { display: block; width: 44px; height: 58px; background: repeating-linear-gradient(180deg, #e9ebf2 0 3px, #ffffff 3px 7px) 6px 8px / 32px 44px no-repeat, #ffffff; box-shadow: 0 0 0 1px var(--pauta, #737a9e); } .ds-doc-nome { margin: 0; font-weight: 600; line-height: 1.35; } .ds-doc-meta { margin: 3px 0 0; font-size: 13.5px; color: var(--tinta-2, #414b7e); } .ds-campo-acoes { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; } .ds-link-btn { display: inline-flex; align-items: center; gap: 5px; padding: 2px 0; border: 0; background: none; color: var(--tinta, #15205c); font: 600 13.5px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); text-decoration: underline; text-decoration-color: var(--pauta, #737a9e); text-underline-offset: 3px; cursor: pointer; } .ds-link-btn:hover { color: var(--carbono, #3a3fb2); text-decoration-color: currentColor; } .ds-link-btn:focus-visible { outline: 2px solid var(--carbono, #3a3fb2); outline-offset: 2px; }"
+    },
+    {
+      "name": "Carimbos",
+      "kind": "custom",
+      "refersTo": "carimbo",
+      "description": "Os dois únicos carimbos: ASSINADO em carbono e CANCELADO em numeradora; o grande bate na folha de entrega.",
+      "html": "<div class=\"ds-carimbos\"><span class=\"ds-carimbo\">Assinado</span><span class=\"ds-carimbo ds-cancelado\">Cancelado</span><span class=\"ds-carimbo ds-grande\">Assinado<small>22/09 · 17:58</small></span></div>",
+      "css": ".ds-carimbos { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 18px; background: var(--via, #ffffff); } .ds-carimbo { display: inline-block; padding: 1px 6px 0; border: 1.5px solid currentColor; border-radius: 2px; font: 600 11px/1.5 var(--fonte-form, \"Labsign Form\", \"Arial Narrow\", \"Helvetica Neue\", system-ui, sans-serif); letter-spacing: 0.1em; text-transform: uppercase; color: var(--carbono, #3a3fb2); transform: rotate(-3deg); white-space: nowrap; } .ds-cancelado { color: var(--numeradora, #bd2a1f); } .ds-grande { padding: 3px 12px 2px; border-width: 2.5px; font-size: 17px; letter-spacing: 0.14em; transform: rotate(-5deg); animation: ds-carimba 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; } .ds-grande small { font-size: 0.72em; letter-spacing: 0.06em; margin-left: 6px; } @keyframes ds-carimba { from { opacity: 0; transform: rotate(-5deg) scale(1.5); } 60% { opacity: 1; transform: rotate(-5deg) scale(0.96); } } @media (prefers-reduced-motion: reduce) { .ds-grande { animation: none; } }"
+    },
+    {
+      "name": "Picote e linha da assinatura",
+      "kind": "custom",
+      "refersTo": "assinatura-linha",
+      "description": "O canhoto com a assinatura sentada numa linha de papel branco, o picote de furos e a via; a divisão é o picote, nunca uma sombra.",
+      "html": "<div class=\"ds-talao\"><div class=\"ds-talao-canhoto\"><h2 class=\"ds-rotulo\">Sua assinatura</h2><div class=\"ds-assinatura-linha\"><svg viewBox=\"0 0 200 44\" width=\"170\" height=\"38\" aria-hidden=\"true\"><path d=\"M8 34 L34 8 L52 36 L86 12 L120 32\" fill=\"none\" stroke=\"#0d1a59\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M4 40 L150 38\" fill=\"none\" stroke=\"#0d1a59\" stroke-width=\"2.6\" stroke-linecap=\"round\"/></svg></div><span class=\"ds-assinatura-nome\">Assinatura</span></div><div class=\"ds-picote\" aria-hidden=\"true\"></div><div class=\"ds-talao-via\"></div></div>",
+      "css": ".ds-talao { display: grid; grid-template-columns: 240px 16px minmax(0, 1fr); min-height: 150px; font: 400 15px/1.5 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); color: var(--tinta, #15205c); } .ds-talao-canhoto { padding: 14px 18px 16px; background: var(--canhoto, #f4e8a6); } .ds-rotulo { margin: 0 0 9px; font: 600 11.5px/1.2 var(--fonte-form, \"Labsign Form\", \"Arial Narrow\", \"Helvetica Neue\", system-ui, sans-serif); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rotulo, var(--tinta, #15205c)); } .ds-assinatura-linha { height: 58px; display: flex; align-items: flex-end; padding: 0 8px 4px; background: #ffffff; border-bottom: 1px solid #737a9e; border-radius: 2px 2px 0 0; box-shadow: 0 0 0 1px var(--pauta-leve, #cfd2e2); } .ds-assinatura-nome { display: block; margin-top: 4px; font-size: 13.5px; color: var(--tinta-2, #414b7e); } .ds-picote { background: radial-gradient(circle at center, var(--chao, #e3e5ee) 2.4px, transparent 2.9px) center top / 16px 11px repeat-y, linear-gradient(90deg, var(--canhoto, #f4e8a6) 0 50%, var(--via, #ffffff) 50% 100%); } .ds-talao-via { background: var(--via, #ffffff); }"
+    },
+    {
+      "name": "Recado",
+      "kind": "custom",
+      "refersTo": "recado",
+      "description": "Aviso rápido sobre as folhas, sem empurrar nada; o de erro vai em numeradora.",
+      "html": "<div class=\"ds-recados\"><p class=\"ds-recado\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.6l4.3 4.3L19 7.2\"/></svg><span>Assinatura salva e posta no documento.</span></p><p class=\"ds-recado ds-erro\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10.3 4.3L2.9 17.2A2 2 0 004.6 20h14.8a2 2 0 001.7-2.8L13.7 4.3a2 2 0 00-3.4 0z\"/><path d=\"M12 9.5v4\"/><path d=\"M12 16.8h.01\"/></svg><span>Não deu para assinar. Tente de novo.</span></p></div>",
+      "css": ".ds-recados { display: grid; gap: 12px; justify-items: start; padding: 18px; background: var(--chao, #e3e5ee); } .ds-recado { margin: 0; max-width: 560px; display: flex; gap: 9px; align-items: flex-start; padding: 10px 14px; border-radius: var(--r, 3px); background: var(--tinta, #15205c); color: var(--via, #ffffff); font: 400 13.5px/1.45 var(--fonte, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", sans-serif); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.45); animation: ds-recado 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; } .ds-recado svg { flex: none; } .ds-erro { background: var(--numeradora, #bd2a1f); color: #ffffff; } @keyframes ds-recado { from { opacity: 0; transform: translateY(8px); } } @media (prefers-reduced-motion: reduce) { .ds-recado { animation: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O Talão de Vias",
+    "overview": "A tela inteira é um talão de recibo com carbono. À esquerda fica o canhoto, em papel canário de 2ª via, com campos pautados que guardam o registro: o documento, onde assinar, a assinatura escolhida, o histórico e o Nº do registro em vermelho de numeradora. No meio, o picote serrilhado. À direita, a via branca com o documento inteiro, a assinatura já sentada na linha e uma régua de páginas para achar o bloco de assinatura no meio de 60 páginas. Assinar destaca a via pelo picote: ela vira a folha de entrega, carimbada ASSINADO, e o canhoto fica com a cópia em azul de carbono. Desfazer carimba CANCELADO.\n\nO formulário é impresso numa cor só, o azul-marinho do ícone, com rótulos em letra estreita e caixa alta, como num impresso de gráfica. O que a pessoa já fez ou escolheu aparece em azul de carbono, como um decalque; o vermelho da numeradora fica para o Nº, o CANCELADO e os erros. A densidade é de formulário: campos curtos, linhas pautadas, texto que explica em uma frase e um botão que diz o que vai acontecer. É liso, sem textura: formulário, não fantasia de papel.\n\nO documento manda na tela. As páginas do PDF são papel branco nos dois temas, a assinatura aparece nelas na tinta real, e o que se vê é o que sai no PDF. O único movimento com peso é a via se soltando do canhoto; o resto fica quieto. A tese recusa três coisas, e elas continuam recusadas: stepper numerado, zona de soltar como tela principal e grade de cartões brancos.",
+    "keyCharacteristics": [
+      "Canhoto, picote e via sempre juntos na tela; no chat, o canhoto sobe e o picote deita.",
+      "Uma cor de impressão (tinta), uma cor de feito ou escolhido (carbono) e um vermelho de numeradora de uso contado.",
+      "Letra estreita Labsign Form (Archivo Narrow 600) para o que é impresso; fonte do sistema para o que se lê.",
+      "Estado dito com cinco sinais: linha pautada vazia, azul de carbono, carimbo ASSINADO, carimbo CANCELADO e esmaecido.",
+      "Papel branco para o documento e para a tinta real da assinatura, nos dois temas.",
+      "Um momento marcante: a via se destaca pelo picote e o carimbo bate."
+    ],
+    "rules": [
+      {
+        "name": "A Regra da Impressão de Uma Cor",
+        "body": "Todo texto, linha e borda impressos saem de tinta, tinta-2, pauta ou pauta-leve. Não existe cinza neutro nem segunda cor de texto: os \"cinzas\" do sistema são azul-marinho diluído.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Decalque",
+        "body": "carbono quer dizer \"feito, escolhido ou a próxima ação\", e nada mais. O que é só impresso nunca é carbono.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Numeradora",
+        "body": "Vermelho só no Nº, no carimbo CANCELADO, em erros e na confirmação de uma ação destrutiva. Se não é número, cancelamento ou erro, não é vermelho.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Papel Branco",
+        "body": "O documento e a tinta real ficam em papel nos dois temas. O que se desenha sobre esse papel (moldura e alça da assinatura, botão de tirar, destaque da busca, foco do quadro) usa o carbono claro (#3a3fb2), nunca carbono-escuro.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Rótulo Impresso",
+        "body": "Letra estreita é o que o formulário traria impresso: nomes de campo e de lugar, Nº, carimbos, números de página e títulos de folha (esses em caixa normal). O que a pessoa lê para decidir — notas, nomes de arquivo, botões, histórico, campos — é sempre a fonte do sistema. Um rótulo nomeia um campo; nunca fica em cima de um título, como chapéu.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra dos Algarismos Tabulares",
+        "body": "Nº, página, horas do histórico, zoom e contagem da busca usam algarismos tabulares, para os números não dançarem quando mudam.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra do Talão Inteiro",
+        "body": "Canhoto, picote e via estão sempre na tela ao mesmo tempo, lado a lado ou empilhados. O canhoto guarda o registro e a via mostra o documento; nenhum dos dois vira passo, aba ou menu.",
+        "section": "layout"
+      },
+      {
+        "name": "A Regra da Saída Antes da Ação",
+        "body": "Todo pé e todo diálogo alinha as ações à direita, com a saída primeiro (Cancelar, Voltar, em discreto) e a próxima ação por último (principal ou perigo). No pé, a nota que diz o que vai acontecer fica à esquerda.",
+        "section": "layout"
+      },
+      {
+        "name": "A Regra de Só o Papel Faz Sombra",
+        "body": "Botões, linhas, campos e chips nunca têm sombra de elevação. Sombra é de papel sobre a mesa, da via que se solta e das duas camadas que flutuam.",
+        "section": "elevation"
+      },
+      {
+        "name": "A Regra do Canto Quase Reto",
+        "body": "3px é o máximo num controle, e folha é reta. Círculo só para marcador, amostra de tinta e o × sobre a página.",
+        "section": "shapes"
+      },
+      {
+        "name": "A Regra do Picote",
+        "body": "Entre canhoto e via só existe o picote: nunca uma sombra, nunca uma borda comum. É por ele que a via rasga quando se destaca.",
+        "section": "shapes"
+      },
+      {
+        "name": "A Regra do Vocabulário Fechado",
+        "body": "Estado se diz com cinco sinais, e só com eles: linha pautada vazia (a fazer), azul de carbono (feito ou escolhido), carimbo ASSINADO, carimbo CANCELADO em vermelho e esmaecido (indisponível). Nada de check verde, selo, barra de progresso ou passo numerado.",
+        "section": "components"
+      },
+      {
+        "name": "A Regra dos Dois Carimbos",
+        "body": "Só existem ASSINADO e CANCELADO. Carimbo registra um fato que aconteceu; nunca é enfeite, selo de novidade ou título.",
+        "section": "components"
+      },
+      {
+        "name": "A Regra da Frase no Botão",
+        "body": "O botão principal diz o verbo e o objeto do próximo passo e muda com o estado (\"Escolher o PDF\", \"Desenhar sua assinatura\", \"Assinar na página 13\"); a nota ao lado diz que arquivo sai e onde. Nunca um genérico \"OK\" ou \"Próximo\".",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do usar tinta para todo texto impresso, tinta-2 para o texto de apoio e pauta para linhas e bordas de controle; todo par novo precisa passar 4,5:1 em texto e 3:1 em borda de controle, nos dois temas.",
+      "Do marcar o que foi escolhido do mesmo jeito em qualquer lista: fundo carbono-leve, marcador com anel de 4,5px em carbono e rótulo em carbono.",
+      "Do manter as páginas do PDF, as miniaturas, a linha da assinatura pendente e o quadro de desenho em papel (#ffffff) nos dois temas, e desenhar o que fica sobre eles com o carbono claro (#3a3fb2).",
+      "Do escrever o botão principal como verbo + objeto (\"Assinar na página 13\") e pôr ao lado a nota do que vai sair e onde.",
+      "Do pôr a saída antes da próxima ação em todo pé e diálogo: discreto primeiro, principal (ou perigo) por último, alinhados à direita.",
+      "Do usar Labsign Form 600 em caixa alta, com 0.04em a 0.14em de espaço, para rótulos, lugares, Nº e carimbos, e a mesma letra em caixa normal para os títulos das folhas.",
+      "Do usar algarismos tabulares em Nº, páginas, horas, zoom e contagens.",
+      "Do usar texto branco sobre numeradora no claro e numeradora-texto-escuro sobre numeradora-escuro no escuro.",
+      "Do trocar cada token pelo seu par -escuro no tema escuro, menos papel, as tintas da assinatura e o que fica sobre o papel.",
+      "Do respeitar prefers-reduced-motion (animações a 1ms, a via não se mexe, rolagem sem suavização) e forced-colors (o escolhido ganha contorno Highlight)."
+    ],
+    "donts": [
+      "Don't escrever \"canhoto\" ou \"picote\" em texto da tela: são nomes internos. Na tela, os campos se chamam Documento, Onde assinar, Sua assinatura e Histórico.",
+      "Don't transformar o fluxo em stepper numerado, zona de soltar tracejada como tela principal ou grade de cartões brancos arredondados; o talão é a estrutura.",
+      "Don't usar vermelho fora do Nº, do CANCELADO, dos erros e da confirmação destrutiva.",
+      "Don't criar um terceiro carimbo nem usar carimbo como enfeite ou selo.",
+      "Don't tingir a prévia pendente da assinatura com a cor do tema: ela fica na tinta real sobre papel, e só depois de assinar o canhoto mostra a cópia em carbono.",
+      "Don't pôr sombra de elevação em controle nem arredondar folha; nada acima de 3px num controle e nenhuma pílula além da amostra de traço.",
+      "Don't usar carbono-escuro ou qualquer valor -escuro sobre papel.",
+      "Don't usar textura, grão ou fantasia de papel: o talão é liso.",
+      "Don't usar a letra estreita em notas, botões, nomes de arquivo ou campos, nem pôr um rótulo em caixa alta em cima de um título, como chapéu; sobre um título, só o carimbo grande, que registra um fato.",
+      "Don't usar emoji ou glifo como ícone; ícone novo segue a grade de 24 com traço de 1,75 e pontas arredondadas."
+    ]
+  }
+}

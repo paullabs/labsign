@@ -7,6 +7,10 @@
 // (e assinaturas digitais de terceiros continuam válidas).
 import {
   PDFDocument,
+  StandardFonts,
+  rgb,
+  degrees,
+  type PDFFont,
   type PDFPage,
   type PDFOperator,
   pushGraphicsState,
@@ -17,6 +21,9 @@ import {
   appendBezierCurve,
   closePath,
   fill,
+  drawObject,
+  type PDFName,
+  type PDFRef,
 } from '@cantoo/pdf-lib';
 import { LabsignError } from './errors.ts';
 import type { Signature } from './signature.ts';
@@ -114,20 +121,69 @@ function outlineOperators(outline: number[][]): PDFOperator[] {
   return ops;
 }
 
-export interface StampOptions {
-  pdfBytes: Uint8Array;
+/** Um desenho (assinatura ou rubrica) em um ou mais lugares, numa cor. */
+export interface StampGroup {
   signature: Signature;
   placements: StampPlacement[];
+  color?: [number, number, number];
+}
+
+/** Texto escrito na página (local e data, nome, CPF): coordenadas visuais do canto de cima à esquerda. */
+export interface StampText {
+  pageIndex: number;
+  x: number;
+  y: number;
+  size: number;
+  lines: string[];
+  color?: [number, number, number];
+}
+
+export interface StampOptions {
+  pdfBytes: Uint8Array;
+  /** Um desenho só (forma antiga); ou `groups`, para assinatura e rubrica no mesmo salvamento. */
+  signature?: Signature;
+  placements?: StampPlacement[];
+  groups?: StampGroup[];
+  texts?: StampText[];
   mode?: 'incremental' | 'rewrite';
   color?: [number, number, number];
   password?: string;
 }
 
-export async function stampSignature({ pdfBytes, signature, placements, mode = 'incremental', color = [0.05, 0.1, 0.35], password }: StampOptions) {
-  const incremental = mode === 'incremental';
-  const doc = await PDFDocument.load(pdfBytes, { forIncrementalUpdate: incremental, password });
-  const pages = doc.getPages();
+const TOL = 1;
+/** Altura de uma linha de texto, em múltiplos do tamanho da letra. */
+export const TEXT_LEADING = 1.3;
 
+/** Caixa do desenho, em unidades da assinatura: as curvas ficam dentro do fecho dos pontos do contorno. */
+function outlineBounds(signature: Signature): [number, number, number, number] {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const o of signature.outlines)
+    for (const [x, y] of o) {
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x);
+      y1 = Math.max(y1, y);
+    }
+  return Number.isFinite(x0) ? [x0 - 1, y0 - 1, x1 + 1, y1 + 1] : [0, 0, signature.width, signature.height];
+}
+
+/** Nome do desenho nos recursos da página (páginas que dividem os mesmos recursos reaproveitam o nome). */
+function xobjectName(page: PDFPage, ref: PDFRef): PDFName {
+  const { XObject } = page.node.normalizedEntries();
+  for (const [key, value] of XObject.entries()) if (value === ref) return key;
+  return page.node.newXObject('LabsignSig', ref);
+}
+
+function drawGroup(doc: PDFDocument, pages: PDFPage[], { signature, placements, color }: Required<StampGroup>): void {
+  // o desenho, em unidades da assinatura; um fill por traço: traços que se cruzam nunca se cancelam (regra nonzero)
+  const drawing: PDFOperator[] = [setFillingRgbColor(...color)];
+  for (const outline of signature.outlines) {
+    const path = outlineOperators(outline);
+    if (path.length) drawing.push(...path, fill());
+  }
+  // em vários lugares (rubrica em todas as páginas): o desenho entra uma vez no arquivo, como Form XObject,
+  // e cada página só aponta para ele — 60 páginas rubricadas não repetem o traço 60 vezes
+  const shared = placements.length > 1 ? doc.context.register(doc.context.formXObject(drawing, { BBox: outlineBounds(signature) })) : null;
   for (const p of placements) {
     const page = pages[p.pageIndex];
     if (!page) throw new LabsignError('PAGE_MISSING', { page: p.pageIndex + 1 });
@@ -135,21 +191,55 @@ export async function stampSignature({ pdfBytes, signature, placements, mode = '
     // a posição vem da tela (o humano arrastou) — ainda assim, nada fora da página
     const { width: W, height: H } = visualPageSize(page);
     const h = signature.height * k;
-    const TOL = 1;
     if (![p.x, p.y, p.width].every(Number.isFinite) || p.x < -TOL || p.y < -TOL || p.x + p.width > W + TOL || p.y + h > H + TOL) {
       throw new LabsignError('OUT_OF_PAGE', { page: p.pageIndex + 1 });
     }
     const [a, b, c, d, e, f] = signatureMatrix(page, p.x, p.y, k);
-    const ops: PDFOperator[] = [pushGraphicsState(), concatTransformationMatrix(a, b, c, d, e, f), setFillingRgbColor(...color)];
-    // um fill por traço: traços que se cruzam nunca se cancelam (regra nonzero)
-    for (const outline of signature.outlines) {
-      const path = outlineOperators(outline);
-      if (path.length) ops.push(...path, fill());
-    }
-    ops.push(popGraphicsState());
-    page.pushOperators(...ops);
+    page.pushOperators(
+      pushGraphicsState(),
+      concatTransformationMatrix(a, b, c, d, e, f),
+      ...(shared ? [drawObject(xobjectName(page, shared))] : drawing),
+      popGraphicsState(),
+    );
   }
+}
 
+/** Só os caracteres que a fonte padrão do PDF sabe escrever (acentos do português, sim; emoji, não). */
+function printable(font: PDFFont, text: string): string {
+  const ok = new Set(font.getCharacterSet());
+  return [...text].map((ch) => (ok.has(ch.codePointAt(0)!) ? ch : '?')).join('');
+}
+
+function drawTexts(pages: PDFPage[], font: PDFFont, texts: StampText[], fallback: [number, number, number]): void {
+  for (const t of texts) {
+    const page = pages[t.pageIndex];
+    if (!page) throw new LabsignError('PAGE_MISSING', { page: t.pageIndex + 1 });
+    const { width: W, height: H } = visualPageSize(page);
+    const lines = t.lines.map((l) => printable(font, l));
+    const width = Math.max(0, ...lines.map((l) => font.widthOfTextAtSize(l, t.size)));
+    const height = t.size * TEXT_LEADING * lines.length;
+    if (![t.x, t.y, t.size].every(Number.isFinite) || t.x < -TOL || t.y < -TOL || t.x + width > W + TOL || t.y + height > H + TOL) {
+      throw new LabsignError('OUT_OF_PAGE', { page: t.pageIndex + 1 });
+    }
+    const rot = normRotation(page.getRotation().angle);
+    const [r, g, b] = t.color ?? fallback;
+    lines.forEach((line, i) => {
+      if (!line.trim()) return;
+      // linha de base de cada linha, em coordenadas visuais -> ponto no espaço do usuário (a mesma conta do desenho)
+      const baseline = t.y + t.size * (0.95 + i * TEXT_LEADING);
+      const [, , , , x, y] = signatureMatrix(page, t.x, baseline, 1);
+      page.drawText(line, { x, y, size: t.size, font, color: rgb(r, g, b), rotate: degrees(rot) });
+    });
+  }
+}
+
+export async function stampSignature({ pdfBytes, signature, placements, groups, texts = [], mode = 'incremental', color = [0.05, 0.1, 0.35], password }: StampOptions) {
+  const incremental = mode === 'incremental';
+  const doc = await PDFDocument.load(pdfBytes, { forIncrementalUpdate: incremental, password });
+  const pages = doc.getPages();
+  const all = groups ?? (signature && placements ? [{ signature, placements }] : []);
+  for (const g of all) drawGroup(doc, pages, { signature: g.signature, placements: g.placements, color: g.color ?? color });
+  if (texts.length) drawTexts(pages, await doc.embedFont(StandardFonts.Helvetica), texts, color);
   const bytes = incremental ? await doc.save() : await doc.save({ rewrite: true });
   return { bytes, mode };
 }

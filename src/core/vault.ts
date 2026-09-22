@@ -52,10 +52,45 @@ export interface SignatureMeta {
 }
 
 export type DrawMode = 'drag' | 'click';
+/** Altura do painel dentro do chat: pequeno, médio ou grande. */
+export type PanelSize = 'p' | 'm' | 'g';
+const isPanel = (v: unknown): v is PanelSize => v === 'p' || v === 'm' || v === 'g';
+
+/** Local e data (e nome/CPF), lembrados para a próxima vez — ficam só neste computador. */
+export interface FillPrefs {
+  city: string;
+  name: string;
+  doc: string;
+}
+/** Rubrica: distância do canto de baixo à direita de cada página, largura, e se entra também onde vai a assinatura. */
+export interface RubricaPrefs {
+  dx: number;
+  dy: number;
+  w: number;
+  withSigned: boolean;
+}
+
 export interface Prefs {
   drawMode: DrawMode;
   ink: Ink;
   pen: Pen;
+  panel: PanelSize;
+  fill: FillPrefs;
+  rubrica: RubricaPrefs;
+}
+
+const DEFAULT_FILL: FillPrefs = { city: '', name: '', doc: '' };
+// um pouco acima do rodapé: o número da página costuma ficar a ~30 pt da borda de baixo
+const DEFAULT_RUBRICA: RubricaPrefs = { dx: 40, dy: 56, w: 58, withSigned: false };
+const text80 = (v: unknown, fallback: string) => (typeof v === 'string' ? v.replace(/[\r\n\t]+/g, ' ').trim().slice(0, 80) : fallback);
+const num = (v: unknown, lo: number, hi: number, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(Math.max(v, lo), hi) : fallback);
+function readFill(v: unknown, base: FillPrefs = DEFAULT_FILL): FillPrefs {
+  const o: Record<string, unknown> = isObject(v) ? v : {};
+  return { city: text80(o.city, base.city), name: text80(o.name, base.name), doc: text80(o.doc, base.doc) };
+}
+function readRubrica(v: unknown, base: RubricaPrefs = DEFAULT_RUBRICA): RubricaPrefs {
+  const o: Record<string, unknown> = isObject(v) ? v : {};
+  return { dx: num(o.dx, 0, 400, base.dx), dy: num(o.dy, 0, 600, base.dy), w: num(o.w, 20, 200, base.w), withSigned: typeof o.withSigned === 'boolean' ? o.withSigned : base.withSigned };
 }
 
 /** Avisos para quem estiver no terminal (ex.: migração do cofre do protótipo). */
@@ -212,7 +247,7 @@ export function markSignatureUsed(id: string): void {
 
 // Preferências da tela ficam no cofre: a porta do servidor muda a cada sessão,
 // então o armazenamento do navegador não sobreviveria. "Segurar e arrastar" é o padrão.
-const DEFAULT_PREFS: Prefs = { drawMode: 'drag', ink: DEFAULT_INK, pen: DEFAULT_PEN };
+const DEFAULT_PREFS: Prefs = { drawMode: 'drag', ink: DEFAULT_INK, pen: DEFAULT_PEN, panel: 'm', fill: DEFAULT_FILL, rubrica: DEFAULT_RUBRICA };
 
 /** config.json ausente, ilegível ou que não é um objeto (ex.: "null"): vale o padrão. */
 function readConfig(): Record<string, unknown> {
@@ -231,6 +266,9 @@ export function getPrefs(): Prefs {
     drawMode: saved.drawMode === 'click' ? 'click' : DEFAULT_PREFS.drawMode,
     ink: isInk(saved.ink) ? saved.ink : DEFAULT_PREFS.ink,
     pen: isPen(saved.pen) ? saved.pen : DEFAULT_PREFS.pen,
+    panel: isPanel(saved.panel) ? saved.panel : DEFAULT_PREFS.panel,
+    fill: readFill(saved.fill),
+    rubrica: readRubrica(saved.rubrica),
   };
 }
 
@@ -240,6 +278,9 @@ export function setPrefs(input: Partial<Record<keyof Prefs, unknown>> | undefine
   if (input?.drawMode === 'click' || input?.drawMode === 'drag') prefs.drawMode = input.drawMode;
   if (isInk(input?.ink)) prefs.ink = input.ink;
   if (isPen(input?.pen)) prefs.pen = input.pen;
+  if (isPanel(input?.panel)) prefs.panel = input.panel;
+  if (isObject(input?.fill)) prefs.fill = readFill(input.fill, prefs.fill);
+  if (isObject(input?.rubrica)) prefs.rubrica = readRubrica(input.rubrica, prefs.rubrica);
   writeAtomic(CONFIG, JSON.stringify({ ...readConfig(), prefs }, null, 2));
   return prefs;
 }
@@ -367,4 +408,13 @@ export function verifyAuditChain(): { ok: boolean; entries: number } {
     prev = hash;
   }
   return { ok: true, entries: lines.length };
+}
+
+/** Quantas vezes um evento aparece no log (ex.: assinaturas feitas neste computador). Linha ilegível não conta. */
+export function countAuditEvents(event: string): number {
+  if (!existsSync(AUDIT)) return 0;
+  const needle = `"event":${JSON.stringify(event)}`;
+  let n = 0;
+  for (const line of readFileSync(AUDIT, 'utf8').split('\n')) if (line.includes(needle)) n++;
+  return n;
 }

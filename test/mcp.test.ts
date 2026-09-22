@@ -90,7 +90,7 @@ test('A) app sem tela embutida: página local, espera limitada e as travas de se
     const doc = Buffer.from(await (await api(base, 'document', human)).arrayBuffer());
     assert.ok(doc.equals(readFileSync(file)), 'a prévia recebe os bytes exatos');
     const ui = await (await api(base, 'state', human)).json();
-    assert.deepEqual(ui.prefs, { drawMode: 'drag', ink: 'navy', pen: 'medium' });
+    assert.deepEqual(ui.prefs, { drawMode: 'drag', ink: 'navy', pen: 'medium', panel: 'm', fill: { city: '', name: '', doc: '' }, rubrica: { dx: 40, dy: 56, w: 58, withSigned: false } });
     assert.equal(ui.document.outputName, 'contrato.assinado.pdf');
     assert.equal((await api(base, 'signed_document', human)).status, 400, 'baixar antes de assinar');
 
@@ -207,13 +207,15 @@ test('A) PDF anexado só na conversa: a página recebe o arquivo e a cópia vai 
 });
 
 test('B) app com MCP Apps: tela embutida, tools só-da-tela e token fora do alcance do modelo', async () => {
-  const { client, file, work } = await connect({ extensions: UI_EXT }, 45000);
+  const trash = tempDir();
+  const { client, file, work } = await connect({ extensions: UI_EXT }, 45000, { LABSIGN_TRASH_DIR: trash });
   try {
     const tools = (await client.listTools()).tools;
     const sign = tools.find((t) => t.name === 'labsign_sign_document')!;
     assert.equal((sign._meta as any)?.ui?.resourceUri, 'ui://labsign/sign.html');
     const viewTools = tools.filter((t) => t.name.startsWith('labsign_view_'));
-    assert.equal(viewTools.length, 11);
+    assert.equal(viewTools.length, 18);
+    for (const n of ['remove_document', 'deliver', 'save_copy', 'save_job', 'undo', 'open_in_browser', 'receipt']) assert.ok(viewTools.some((t) => t.name === `labsign_view_${n}`), n);
     assert.ok(viewTools.every((t) => JSON.stringify((t._meta as any).ui.visibility) === '["app"]'));
     assert.ok(!tools.filter((t) => !t.name.startsWith('labsign_view_')).some((t) => /delete|confirm|signed|reveal/.test(t.name)), 'o modelo não apaga, não confirma, não baixa');
 
@@ -255,6 +257,18 @@ test('B) app com MCP Apps: tela embutida, tools só-da-tela e token fora do alca
     assert.deepEqual([entry.ink, entry.pen], ['black', 'fine']);
     const late = await view('delete_signature', { id: saved.id });
     assert.equal(JSON.parse(late.content[0].text).error, 'SESSION_CLOSED', 'pedido encerrado não mexe mais no cofre');
+
+    // entrega pelo computador (em teste não abre nada) e desfazer: a cópia vai para a "Lixeira" e o pedido reabre
+    assert.equal((await view('deliver', { action: 'open' })).structuredContent.done, false);
+    if (process.platform !== 'linux') assert.equal(JSON.parse((await view('deliver', { action: 'mail', client: 'default' })).content[0].text).error, 'DELIVERY_UNAVAILABLE', 'app de e-mail que não existe aqui');
+    const undone = (await view('undo')).structuredContent;
+    assert.equal(undone.status, 'pending');
+    assert.ok(!existsSync(done.signed_file) && existsSync(join(trash, done.signed_file.split(/[\\/]/).pop())), 'na Lixeira');
+    const state = (await view('state')).structuredContent;
+    assert.ok(state.history.some((h: any) => h.event === 'undone'), 'histórico');
+    assert.equal((await view('confirm', { signatureId: extra.id })).isError, true, 'assinatura apagada não assina');
+    const again = (await view('confirm', { signatureId: saved.id, placements: [{ pageIndex: 1, x: 300, y: 500, width: 150 }] })).structuredContent;
+    assert.equal(again.status, 'signed', 'assina de novo depois de desfazer');
     assert.equal(JSON.parse((await view('state', {}, 'inventado')).content[0].text).error, 'UNAUTHORIZED', 'erro de token também com código');
 
     // PDF anexado na conversa: sobe em blocos pela tool da tela
@@ -268,5 +282,6 @@ test('B) app com MCP Apps: tela embutida, tools só-da-tela e token fora do alca
   } finally {
     await client.close();
     cleanup(work);
+    cleanup(trash);
   }
 });
